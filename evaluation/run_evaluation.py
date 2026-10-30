@@ -32,7 +32,7 @@ import json
 import os
 import sys
 
-import possession_metrics as pm
+import evaluation.possession_metrics as pm
 
 # Load Data
 HERE = os.path.dirname(os.path.abspath(__file__))

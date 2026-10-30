@@ -1,0 +1,258 @@
+{
+  "n_frames": 199319,
+  "n_in_play_frames": 158857,
+  "half_blocks": [
+    [
+      1,
+      11185,
+      90651
+    ],
+    [
+      2,
+      110808,
+      190197
+    ]
+  ],
+  "alignment": {
+    "n_records": 199319,
+    "n_video_frames": 199319,
+    "frame_id_range": [
+      1,
+      199319
+    ],
+    "contiguous": true,
+    "first_video_frame": 0,
+    "agrees": true
+  },
+  "ball_presence": {
+    "whole file": {
+      "present": 113488,
+      "frames": 199319,
+      "pct": 56.93787345912833
+    },
+    "half 1 in play": {
+      "present": 47163,
+      "frames": 79467,
+      "pct": 59.349163803843105
+    },
+    "half 2 in play": {
+      "present": 47051,
+      "frames": 79390,
+      "pct": 59.26565058571609
+    },
+    "in play (both halves)": {
+      "present": 94214,
+      "frames": 158857,
+      "pct": 59.3074274347369
+    },
+    "outside play": {
+      "present": 19274,
+      "frames": 40462,
+      "pct": 47.63481785378874
+    }
+  },
+  "gap_summary": {
+    "n_gaps": 150,
+    "missing_frames": 64643,
+    "censored_gaps": 3,
+    "median": 268.0,
+    "p90": 845.2999999999995,
+    "p99": 2618.7899999999845,
+    "max": 5537,
+    "pct_missing_frames_in_gaps_up_to": {
+      "1": 0.003093915814550686,
+      "5": 0.04795569512553564,
+      "12": 0.08198876908559317,
+      "25": 0.11602184304565073,
+      "50": 0.11602184304565073,
+      "125": 0.3047507077332426,
+      "250": 14.757978435406773,
+      "500": 33.02909827823585
+    },
+    "bins": [
+      {
+        "bin": "1",
+        "approx_time": "0.04 s",
+        "lower_frames": 1,
+        "n_gaps": 2,
+        "pct_of_gaps": 1.3333333333333333,
+        "frames": 2,
+        "pct_of_missing_frames": 0.003093915814550686,
+        "cum_pct_of_missing_frames": 0.003093915814550686,
+        "median_bracket_m": 5.200019598007202,
+        "p90_bracket_m": 6.717258024215698,
+        "pct_implausible_speed": 100.0,
+        "pct_team_flip": 0.0,
+        "n_bracketed": 2
+      },
+      {
+        "bin": "2",
+        "approx_time": "0.08 s",
+        "lower_frames": 2,
+        "n_gaps": 9,
+        "pct_of_gaps": 6.0,
+        "frames": 18,
+        "pct_of_missing_frames": 0.027845242330956175,
+        "cum_pct_of_missing_frames": 0.03093915814550686,
+        "median_bracket_m": 7.159684181213379,
+        "p90_bracket_m": 32.19776077270507,
+        "pct_implausible_speed": 75.0,
+        "pct_team_flip": 62.5,
+        "n_bracketed": 8
+      },
+      {
+        "bin": "3-5",
+        "approx_time": "<0.24 s",
+        "lower_frames": 3,
+        "n_gaps": 3,
+        "pct_of_gaps": 2.0,
+        "frames": 11,
+        "pct_of_missing_frames": 0.017016536980028772,
+        "cum_pct_of_missing_frames": 0.04795569512553564,
+        "median_bracket_m": 8.241127967834473,
+        "p90_bracket_m": 9.483809852600098,
+        "pct_implausible_speed": 66.66666666666667,
+        "pct_team_flip": 33.333333333333336,
+        "n_bracketed": 3
+      },
+      {
+        "bin": "6-12",
+        "approx_time": "<0.5 s",
+        "lower_frames": 6,
+        "n_gaps": 2,
+        "pct_of_gaps": 1.3333333333333333,
+        "frames": 22,
+        "pct_of_missing_frames": 0.034033073960057544,
+        "cum_pct_of_missing_frames": 0.08198876908559317,
+        "median_bracket_m": 17.833251953125,
+        "p90_bracket_m": 18.897915649414063,
+        "pct_implausible_speed": 50.0,
+        "pct_team_flip": 50.0,
+        "n_bracketed": 2
+      },
+      {
+        "bin": "13-25",
+        "approx_time": "<1 s",
+        "lower_frames": 13,
+        "n_gaps": 1,
+        "pct_of_gaps": 0.6666666666666666,
+        "frames": 22,
+        "pct_of_missing_frames": 0.034033073960057544,
+        "cum_pct_of_missing_frames": 0.11602184304565073,
+        "median_bracket_m": 29.642791748046875,
+        "p90_bracket_m": 29.642791748046875,
+        "pct_implausible_speed": 0.0,
+        "pct_team_flip": 0.0,
+        "n_bracketed": 1
+      },
+      {
+        "bin": "26-50",
+        "approx_time": "<2 s",
+        "lower_frames": 26,
+        "n_gaps": 0,
+        "pct_of_gaps": 0.0,
+        "frames": 0,
+        "pct_of_missing_frames": 0.0,
+        "cum_pct_of_missing_frames": 0.11602184304565073,
+        "median_bracket_m": null,
+        "p90_bracket_m": null,
+        "pct_implausible_speed": null,
+        "pct_team_flip": null,
+        "n_bracketed": 0
+      },
+      {
+        "bin": "51-125",
+        "approx_time": "<5 s",
+        "lower_frames": 51,
+        "n_gaps": 1,
+        "pct_of_gaps": 0.6666666666666666,
+        "frames": 122,
+        "pct_of_missing_frames": 0.18872886468759184,
+        "cum_pct_of_missing_frames": 0.3047507077332426,
+        "median_bracket_m": null,
+        "p90_bracket_m": null,
+        "pct_implausible_speed": null,
+        "pct_team_flip": null,
+        "n_bracketed": 0
+      },
+      {
+        "bin": "126-250",
+        "approx_time": "<10 s",
+        "lower_frames": 126,
+        "n_gaps": 53,
+        "pct_of_gaps": 35.333333333333336,
+        "frames": 9343,
+        "pct_of_missing_frames": 14.45322772767353,
+        "cum_pct_of_missing_frames": 14.757978435406773,
+        "median_bracket_m": 7.6787943840026855,
+        "p90_bracket_m": 27.11737365722657,
+        "pct_implausible_speed": 0.0,
+        "pct_team_flip": 39.62264150943396,
+        "n_bracketed": 53
+      },
+      {
+        "bin": "251-500",
+        "approx_time": "<20 s",
+        "lower_frames": 251,
+        "n_gaps": 35,
+        "pct_of_gaps": 23.333333333333332,
+        "frames": 11811,
+        "pct_of_missing_frames": 18.271119842829076,
+        "cum_pct_of_missing_frames": 33.02909827823585,
+        "median_bracket_m": 9.875378131866455,
+        "p90_bracket_m": 40.835730361938474,
+        "pct_implausible_speed": 0.0,
+        "pct_team_flip": 35.294117647058826,
+        "n_bracketed": 34
+      },
+      {
+        "bin": ">500",
+        "approx_time": ">20 s",
+        "lower_frames": 501,
+        "n_gaps": 44,
+        "pct_of_gaps": 29.333333333333332,
+        "frames": 43292,
+        "pct_of_missing_frames": 66.97090172176415,
+        "cum_pct_of_missing_frames": 100.0,
+        "median_bracket_m": 15.141875743865967,
+        "p90_bracket_m": 36.61411209106447,
+        "pct_implausible_speed": 0.0,
+        "pct_team_flip": 47.72727272727273,
+        "n_bracketed": 44
+      }
+    ]
+  },
+  "near_goal_line": {
+    "pct_missing_frames": 56.32648009777076,
+    "pct_seen_frames": 20.56594561317851
+  },
+  "players": {
+    "mean": 20.487419503075092,
+    "median": 22.0,
+    "min": 1,
+    "max": 25,
+    "pct_lt_18": 9.200727698496133,
+    "pct_lt_20": 14.8838263343762,
+    "pct_gt_22": 2.359984136676382,
+    "slots_never_active": 3
+  },
+  "parse_issues": {
+    "bad_lines": 0,
+    "id_not_sequential": 0,
+    "id_out_of_range": 0,
+    "wrong_slot_count": 0,
+    "player_position_partial": 0,
+    "player_speed_only_nan": 370297,
+    "ball_partial": 0,
+    "ball_outside_pitch": 4964
+  },
+  "homography": {
+    "valid_pct_in_play": 100.0,
+    "error_median": 0.230840027
+  },
+  "smart_tagging": {
+    "n": 638,
+    "team_na": 36,
+    "pct_in_play_uncovered": 17.726005149285207
+  }
+}
