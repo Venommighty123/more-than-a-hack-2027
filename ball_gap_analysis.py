@@ -19,9 +19,17 @@ enormous gaps that swamp the histogram. A gap never crosses a half boundary.
 Everything else that can be missing is audited too: ATD alignment and malformed records, tracked
 players per frame, slots that never fire, the homography, and Smart Tagging coverage.
 
+Section 5 audits the team mapping, because a possession call is only as good as "whose player is
+this?". baseline.team_of_each_track() maps every slot whose teamId is not the first team to AWAY,
+so a slot with no team (or a third id) silently becomes an away player. Nothing in the repository
+counts them, so this does: slots without a team, frames where a team is barely tracked, how often
+the nearest-player rule cannot give a clear answer, and how often a slot's track breaks (a proxy
+for the identity swaps DATA.md warns about).
+
 Reuses, rather than re-implements: games (paths, half blocks), load_atd.check_alignment_raw,
 baseline.team_of_each_track / nearest_player_labels, load_homography.load / check_alignment and
-load_smart_tagging.load / check_time_base. Put this file in starter/ or the repository root.
+load_smart_tagging.load / check_time_base. Team labels are baseline.team_of_each_track, the mapping
+under test. Put this file in starter/ or the repository root.
 
     pip install numpy pandas matplotlib          # matplotlib only for the PNG
     python ball_gap_analysis.py                  # ~1-3 min: it streams the raw ATD twice
@@ -51,7 +59,8 @@ for _p in (ROOT, os.path.join(ROOT, "starter"), HERE):
         sys.path.insert(0, _p)
 
 from games import GAME, GAMES, half_video_blocks, require, source_frames  # noqa: E402
-from starter import baseline, load_atd
+import baseline  # noqa: E402
+import load_atd  # noqa: E402
 
 # Params
 FPS = GAMES[GAME]["fps"]
@@ -67,6 +76,12 @@ BIN_LOWER = (1, 2, 3, 6, 13, 26, 51, 126, 251, 501)
 BIN_LABEL = ("1", "2", "3-5", "6-12", "13-25", "26-50", "51-125", "126-250", "251-500", ">500")
 BIN_SECONDS = ("0.04 s", "0.08 s", "<0.24 s", "<0.5 s", "<1 s", "<2 s", "<5 s", "<10 s", "<20 s", ">20 s")
 CUMULATIVE_AT = (1, 5, 12, 25, 50, 125, 250, 500)  # frames
+# Team-mapping thresholds. Judgement calls, so they are named and easy to change.
+MIN_TEAM_TRACKED = 8        # a team with fewer tracked players than this is too sparse to trust
+AMBIGUOUS_M = 1.0           # nearest home and nearest away player within this many metres: a coin flip
+UNATTENDED_M = 5.0          # nearest player farther than this: nobody is plausibly on the ball
+MAX_PLAYER_SPEED = 12.0     # m/s, a sprint. Faster than this between detections = a different person
+JUMP_SLACK_M = 2.0          # tracking noise allowed on top of MAX_PLAYER_SPEED
 
 INK, INK_MUTED, GRID, SERIES, ACCENT = "#1f2933", "#52606d", "#d9dee3", "#2a6fdb", "#c2410c"
 
@@ -87,12 +102,12 @@ def pct(part, whole):
 # -- pass 1: one streaming read of the raw ATD -------------------------------------------------
 
 def scan_atd(raw_path, n_frames, n_slots):
-    """Per video frame: which track slots have a position, and the ball position.
+    """Per video frame: every track slot's position (NaN = absent) and the ball position.
 
     Also counts every malformed thing it meets. Raw line: "<frame_id>:<x,y,s>;...:<ball>", with
     frame_id = video frame + 1, and NaN for a missing observation.
     """
-    present = np.zeros((n_frames, n_slots), dtype=bool)
+    pos = np.full((n_frames, n_slots, 2), np.nan, dtype=np.float32)    # normalised x, y per slot
     ball = np.full((n_frames, 2), np.nan, dtype=np.float32)
     issues = {"bad_lines": 0, "id_not_sequential": 0, "id_out_of_range": 0,
               "wrong_slot_count": 0, "player_position_partial": 0, "player_speed_only_nan": 0,
@@ -118,18 +133,19 @@ def scan_atd(raw_path, n_frames, n_slots):
             if len(groups) != n_slots:
                 issues["wrong_slot_count"] += 1
             for slot, group in enumerate(groups[:n_slots]):
-                if group.count(MISSING) == 0:
-                    present[i, slot] = True
-                    continue
                 fields = group.split(",")
-                gone = [MISSING in f for f in fields[:2]]
-                if all(gone):
-                    continue                               # a clean missing slot
-                if any(gone):
-                    issues["player_position_partial"] += 1  # x or y missing, not both
-                else:
-                    present[i, slot] = True                 # position fine, speed NaN
-                    issues["player_speed_only_nan"] += 1
+                if len(fields) < 2:
+                    issues["player_position_partial"] += 1
+                    continue
+                if MISSING in group:
+                    gone = [MISSING in f for f in fields[:2]]
+                    if all(gone):
+                        continue                               # a clean missing slot
+                    if any(gone):
+                        issues["player_position_partial"] += 1  # x or y missing, not both
+                        continue
+                    issues["player_speed_only_nan"] += 1        # position fine, speed NaN
+                pos[i, slot] = (float(fields[0]), float(fields[1]))
 
             fields = parts[2].strip().split(",")
             if len(fields) < 2:
@@ -147,7 +163,7 @@ def scan_atd(raw_path, n_frames, n_slots):
                 ball[i] = (bx, by)
                 if not (0.0 <= bx <= 1.0 and 0.0 <= by <= 1.0):
                     issues["ball_outside_pitch"] += 1
-    return present, ball, issues
+    return pos, ball, issues
 
 
 # -- gaps --------------------------------------------------------------------------------------
@@ -156,7 +172,7 @@ def find_gaps(ball_ok, blocks):
     """Maximal runs of missing ball inside each half. Returns dict of equal-length arrays.
 
     has_before / has_after say whether a detection exists on that side *within the half*. A gap
-    touching the whiste-to-whistle edge is censored: its true length is unknown, and it has no
+    touching the edge of a half is censored: its true length is unknown, and it has no
     bracketing detection on one side, so it is left out of the bracket statistics.
     """
     half, start, length, before, after = [], [], [], [], []
@@ -296,6 +312,135 @@ def plot_histogram(path, gaps, in_play_frames):
     return True
 
 
+# -- team mapping ------------------------------------------------------------------------------
+
+CALL_CLASSES = ("no_player", "nearest_is_unmapped", "one_team_only", "unattended", "ambiguous", "clear")
+CALL_MEANING = {
+    "no_player": "ball seen, but no player tracked at all",
+    "nearest_is_unmapped": "nearest tracked slot has no team (baseline calls it AWAY)",
+    "one_team_only": "ball seen, but one team has nobody tracked",
+    "unattended": "nearest player more than {:.0f} m from the ball".format(UNATTENDED_M),
+    "ambiguous": "nearest home and away player within {:.1f} m of each other".format(AMBIGUOUS_M),
+    "clear": "a usable nearest-player team call",
+}
+
+
+def audit_slot_teams(meta_path):
+    """Which track slots does the metadata give a team? Same XML and slot order as baseline.
+
+    Returns (status, info): status is an array over slots of "home" / "away" / "unmapped", where
+    unmapped means the teamId is missing or is neither of the two teams. baseline.team_of_each_track
+    labels those AWAY, which is exactly what this exists to expose.
+    """
+    import xml.etree.ElementTree as ET
+    root = ET.parse(meta_path).getroot()
+    team_ids = [t.get("id") for t in root.iter("Team")]
+    players = list(root.iter("Player"))
+    ids = [p.get("id") for p in players]
+    home_id = team_ids[0] if team_ids else None
+    away_id = team_ids[1] if len(team_ids) > 1 else None
+    status = np.array(["home" if p.get("teamId") == home_id else
+                       "away" if p.get("teamId") == away_id else "unmapped" for p in players])
+
+    # Does the raw column order follow the Player list? baseline assumes so. Where the metadata
+    # names the channel order it can be checked; where it does not, say so rather than guess.
+    channel_order = None
+    channels = {c.get("id"): c.get("playerId") for c in root.iter("PlayerChannel")}
+    refs = [r.get("playerChannelId") for r in root.iter("PlayerChannelRef")]
+    if channels and refs:
+        order = []
+        for ref in refs:
+            player_id = channels.get(ref)
+            if player_id is not None and player_id not in order:
+                order.append(player_id)
+        if len(order) == len(ids):
+            channel_order = {"verifiable": True, "same_order": order == ids}
+        else:
+            channel_order = {"verifiable": False,
+                             "reason": "{} players in channel refs vs {} Player entries".format(
+                                 len(order), len(ids))}
+    return status, {"n_players": len(players), "team_ids": team_ids,
+                    "duplicate_ids": len(ids) - len(set(ids)), "channel_order": channel_order}
+
+
+def team_call_quality(pos, ball, in_play, status, team, codes):
+    """How often the nearest-player rule gives a usable team call, and why not when it does not.
+
+    Over in-play frames where the ball is seen. Each frame gets the FIRST class that applies:
+    no_player > nearest_is_unmapped > one_team_only > unattended > ambiguous > clear.
+    Also checks this vectorised rule against baseline.nearest_player_labels (codes) as a
+    cross-check of both: they must agree wherever a player is tracked.
+    """
+    is_home, is_away = status == "home", status == "away"
+    is_other = ~(is_home | is_away)
+    frames = np.flatnonzero(in_play & ~np.isnan(ball[:, 0]))
+    counts = np.zeros(len(CALL_CLASSES), dtype=np.int64)
+    compared = mismatch = 0
+    for chunk in np.array_split(frames, max(1, len(frames) // 20000)):
+        p, b = pos[chunk], ball[chunk]
+        d = np.hypot((p[:, :, 0] - b[:, None, 0]) * PITCH_L, (p[:, :, 1] - b[:, None, 1]) * PITCH_W)
+        d = np.where(np.isnan(d), np.inf, d)                  # absent slot = infinitely far
+        d_home = np.where(is_home, d, np.inf).min(axis=1)
+        d_away = np.where(is_away, d, np.inf).min(axis=1)
+        d_other = np.where(is_other, d, np.inf).min(axis=1)
+        d_any = d.min(axis=1)
+        nearest = np.minimum(d_home, d_away)
+        with np.errstate(invalid="ignore"):                   # inf - inf
+            close = np.abs(d_home - d_away) < AMBIGUOUS_M
+
+        cls = np.full(len(chunk), 5, dtype=np.int8)           # clear, then overridden by priority
+        cls[close] = 4
+        cls[nearest > UNATTENDED_M] = 3
+        cls[np.isinf(d_home) | np.isinf(d_away)] = 2
+        cls[d_other < nearest] = 1
+        cls[np.isinf(d_any)] = 0
+        counts += np.bincount(cls, minlength=len(CALL_CLASSES))
+
+        if codes is not None:
+            has = ~np.isinf(d_any)
+            mine = team[d.argmin(axis=1)]
+            compared += int(has.sum())
+            mismatch += int((codes[chunk][has] != mine[has]).sum())
+    return {"frames": int(len(frames)), "counts": dict(zip(CALL_CLASSES, counts.tolist())),
+            "baseline_compared": compared, "baseline_mismatch": mismatch}
+
+
+def identity_breaks(pos, in_play, status):
+    """Proxy for identity swaps: a slot moving farther between detections than a person can.
+
+    Slots appear, vanish and swap identity (DATA.md). A swap that hands a slot to a player of the
+    other team would silently flip its team, and no file says when it happens. What can be seen is
+    the footprint: between two detections of one slot, dt frames apart, the position changes by
+    more than MAX_PLAYER_SPEED * dt + JUMP_SLACK_M. That is a lower bound on swaps (a swap between
+    two neighbours is invisible) and an upper bound on them too (a tracker glitch also trips it),
+    so read it as an indicator, not a count.
+
+    A detection is "suspect" for one second after a break.
+    """
+    n_frames, n_slots = pos.shape[:2]
+    jumps, reappear = np.zeros(n_slots, dtype=np.int64), np.zeros(n_slots, dtype=np.int64)
+    suspect_detections = np.zeros(n_slots, dtype=np.int64)
+    detections = np.zeros(n_slots, dtype=np.int64)
+    for slot in range(n_slots):
+        x, y = pos[:, slot, 0] * PITCH_L, pos[:, slot, 1] * PITCH_W
+        idx = np.flatnonzero(in_play & ~np.isnan(x))
+        detections[slot] = len(idx)
+        if len(idx) < 2:
+            continue
+        dt = np.diff(idx)
+        moved = np.hypot(np.diff(x[idx]), np.diff(y[idx]))
+        broke = moved > MAX_PLAYER_SPEED * dt / FPS + JUMP_SLACK_M
+        jumps[slot] = int((broke & (dt == 1)).sum())          # teleported between adjacent frames
+        reappear[slot] = int((broke & (dt > 1)).sum())        # came back somewhere it could not be
+        starts = idx[1:][broke]
+        mark = np.zeros(n_frames + 1, dtype=np.int32)
+        np.add.at(mark, starts, 1)
+        np.add.at(mark, np.minimum(starts + FPS, n_frames), -1)
+        suspect_detections[slot] = int((in_play & ~np.isnan(x) & (np.cumsum(mark)[:n_frames] > 0)).sum())
+    return {"jumps": jumps, "reappear": reappear, "suspect": suspect_detections,
+            "detections": detections}
+
+
 # -- main --------------------------------------------------------------------------------------
 
 def main():
@@ -332,8 +477,9 @@ def main():
 
     t0 = time.time()
     print("\nreading the raw ATD ...")
-    present, ball, issues = scan_atd(raw_path, n_frames, n_slots)
+    pos, ball, issues = scan_atd(raw_path, n_frames, n_slots)
     print("  done in {:.0f}s".format(time.time() - t0))
+    present = ~np.isnan(pos[:, :, 0])
     ball_ok = ~np.isnan(ball[:, 0])
 
     # -- 2. the ball ----------------------------------------------------------------------------
@@ -473,16 +619,107 @@ def main():
                          "pct_gt_22": pct(int((total > 22).sum()), n_play),
                          "slots_never_active": int((active == 0).sum())}
 
-    # -- 5. malformed records -------------------------------------------------------------------
-    heading("5. Malformed or odd records (whole file)")
+    # -- 5. team mapping ------------------------------------------------------------------------
+    heading("5. Team mapping: how much of the tracking cannot say whose it is")
+    status, slot_info = audit_slot_teams(meta_path)
+    is_home, is_away, unmapped = status == "home", status == "away", status == "unmapped"
+    print("  metadata: {} Player entries -> {} home, {} away, {} with no usable team".format(
+        slot_info["n_players"], int(is_home.sum()), int(is_away.sum()), int(unmapped.sum())))
+    if len(status) != n_slots:
+        print("  WARNING: {} Player entries but the team array has {} slots".format(len(status), n_slots))
+    if unmapped.any():
+        print("  slots with no team (1-based): {}".format((np.flatnonzero(unmapped) + 1).tolist()))
+        print("  baseline.team_of_each_track() labels all of them AWAY (labelled away: {})".format(
+            bool((team[unmapped] == baseline.AWAY).all())))
+    if slot_info["duplicate_ids"]:
+        print("  WARNING: {} duplicate Player ids in the metadata".format(slot_info["duplicate_ids"]))
+    order = slot_info["channel_order"]
+    if order is None:
+        print("  raw column order vs Player list: not verifiable (metadata names no player channels)")
+    elif not order["verifiable"]:
+        print("  raw column order vs Player list: not verifiable ({})".format(order["reason"]))
+    else:
+        print("  raw column order vs Player list: {}".format(
+            "same" if order["same_order"] else "DIFFERENT -- baseline's slot -> team mapping is wrong"))
+
+    seen = present[in_play]
+    detections, from_unmapped = int(seen.sum()), int(seen[:, unmapped].sum())
+    print("\n  in-play detections from slots with no team: {:,} of {:,} ({:.2f}%), on {:,} frames ({:.1f}%)".format(
+        from_unmapped, detections, pct(from_unmapped, detections),
+        int(seen[:, unmapped].any(axis=1).sum()), pct(int(seen[:, unmapped].any(axis=1).sum()), n_play)))
+
+    n_home_seen, n_away_seen = seen[:, is_home].sum(axis=1), seen[:, is_away].sum(axis=1)
+    print("\n  per-team coverage of in-play frames (mapped slots only):")
+    coverage = {}
+    for name, mask in (("home team has nobody tracked", n_home_seen == 0),
+                       ("away team has nobody tracked", n_away_seen == 0),
+                       ("home below {} tracked".format(MIN_TEAM_TRACKED), n_home_seen < MIN_TEAM_TRACKED),
+                       ("away below {} tracked".format(MIN_TEAM_TRACKED), n_away_seen < MIN_TEAM_TRACKED),
+                       ("either team below {}".format(MIN_TEAM_TRACKED),
+                        (n_home_seen < MIN_TEAM_TRACKED) | (n_away_seen < MIN_TEAM_TRACKED))):
+        coverage[name] = pct(int(mask.sum()), n_play)
+        print("    {:<34} {:>8,}  {:5.1f}%".format(name, int(mask.sum()), coverage[name]))
+
+    quality = team_call_quality(pos, ball, in_play, status, team, codes)
+    n_ball_play = quality["frames"]
+    print("\n  nearest-player team call, in-play frames where the ball is seen ({:,}):".format(n_ball_play))
+    print("    {:<22} {:>8} {:>8} {:>8}   {}".format("outcome", "frames", "% ball", "% play", "meaning"))
+    for name in CALL_CLASSES:
+        c = quality["counts"][name]
+        print("    {:<22} {:>8,} {:>7.1f}% {:>7.1f}%   {}".format(
+            name, c, pct(c, n_ball_play), pct(c, n_play), CALL_MEANING[name]))
+    ball_gone = n_play - n_ball_play
+    unusable = n_ball_play - quality["counts"]["clear"]
+    print("    {:<22} {:>8,} {:>8} {:>7.1f}%   no ball, so no call at all".format(
+        "ball_missing", ball_gone, "", pct(ball_gone, n_play)))
+    print("\n  => a clear team call exists on {:.1f}% of in-play frames; {:.1f}% have the ball but "
+          "no clear call, {:.1f}% have no ball".format(
+              pct(quality["counts"]["clear"], n_play), pct(unusable, n_play), pct(ball_gone, n_play)))
+    if quality["baseline_compared"]:
+        print("  cross-check vs baseline.nearest_player_labels: {:,} frames compared, {:,} differ".format(
+            quality["baseline_compared"], quality["baseline_mismatch"]))
+    elif codes is None:
+        print("  cross-check vs baseline skipped (--skip-team-flip)")
+
+    breaks = identity_breaks(pos, in_play, status)
+    tot_det = int(breaks["detections"].sum())
+    print("\n  identity-continuity breaks (a slot moves farther than a sprint allows between detections):")
+    for name, mask in (("home slots", is_home), ("away slots", is_away), ("no-team slots", unmapped)):
+        if not mask.any():
+            continue
+        print("    {:<14} {:>6,} teleports, {:>6,} implausible re-appearances, "
+              "{:.2f}% of detections within 1 s of a break".format(
+                  name, int(breaks["jumps"][mask].sum()), int(breaks["reappear"][mask].sum()),
+                  pct(int(breaks["suspect"][mask].sum()), int(breaks["detections"][mask].sum()))))
+    worst = np.argsort(-(breaks["jumps"] + breaks["reappear"]))[:5]
+    print("    most breaks (slot, 1-based): {}".format(
+        ", ".join("{} ({:,})".format(s + 1, int(breaks["jumps"][s] + breaks["reappear"][s])) for s in worst)))
+    print("    all slots: {:.2f}% of detections are within 1 s of a break (an indicator of identity "
+          "swaps, not a count)".format(pct(int(breaks["suspect"].sum()), tot_det)))
+
+    report["team_mapping"] = {
+        "slots": {"home": int(is_home.sum()), "away": int(is_away.sum()),
+                  "unmapped": int(unmapped.sum()),
+                  "unmapped_slots_1_based": (np.flatnonzero(unmapped) + 1).tolist()},
+        "channel_order": order, "duplicate_player_ids": slot_info["duplicate_ids"],
+        "pct_detections_from_unmapped_slots": pct(from_unmapped, detections),
+        "team_coverage_pct_of_in_play_frames": coverage,
+        "team_call": {**quality, "pct_clear_of_in_play": pct(quality["counts"]["clear"], n_play),
+                      "pct_ball_missing_of_in_play": pct(ball_gone, n_play)},
+        "identity_breaks": {"teleports": int(breaks["jumps"].sum()),
+                            "reappearances": int(breaks["reappear"].sum()),
+                            "pct_detections_suspect": pct(int(breaks["suspect"].sum()), tot_det)}}
+
+    # -- 6. malformed records -------------------------------------------------------------------
+    heading("6. Malformed or odd records (whole file)")
     for key, value in issues.items():
         print("  {:<26} {:>9,}".format(key, value))
     report["parse_issues"] = issues
 
     # -- 6. homography --------------------------------------------------------------------------
-    heading("6. Homography")
+    heading("7. Homography")
     try:
-        from starter import load_homography
+        import load_homography
         _, error, valid = load_homography.load()
         check = load_homography.check_alignment()
         print("  rows {} (expected {}), contiguous {}".format(
@@ -499,20 +736,30 @@ def main():
         print("  skipped: {}".format(str(exc).splitlines()[0]))
 
     # -- 7. smart tagging -----------------------------------------------------------------------
-    heading("7. Smart Tagging coverage")
+    heading("8. Smart Tagging coverage")
     try:
-        from starter import load_smart_tagging
+        import load_smart_tagging
         events = load_smart_tagging.load()
-        cover = np.zeros(n_frames + 1, dtype=np.int32)
-        for e in events:
-            s, t = max(0, e["start_frame"]), min(n_frames, e["end_frame"])
-            if t > s:
-                cover[s] += 1
-                cover[t] -= 1
-        cover = np.cumsum(cover)[:n_frames]
+
+        def coverage_of(selected):
+            """Per-frame count of the selected events covering that frame."""
+            diff = np.zeros(n_frames + 1, dtype=np.int32)
+            for e in selected:
+                s, t = max(0, e["start_frame"]), min(n_frames, e["end_frame"])
+                if t > s:
+                    diff[s] += 1
+                    diff[t] -= 1
+            return np.cumsum(diff)[:n_frames]
+
+        cover = coverage_of(events)
         none = in_play & (cover == 0)
-        no_team = sum(1 for e in events if (e["tags"].get("Team") or "").strip().upper() == "N/A")
-        print("  {} instances, {} tagged Team = N/A".format(len(events), no_team))
+        team_na = [e for e in events if (e["tags"].get("Team") or "").strip().upper() == "N/A"]
+        no_team = len(team_na)
+        in_na = in_play & (coverage_of(team_na) > 0)
+        print("  {} instances, {} tagged Team = N/A (throw-ins and the like: no side to take from the tag)"
+              .format(len(events), no_team))
+        print("  in-play frames inside a Team = N/A phase:  {:,}  ({:.1f}%)".format(
+            int(in_na.sum()), pct(int(in_na.sum()), n_play)))
         print("  in-play frames covered by no phase at all: {:,}  ({:.1f}%)".format(
             int(none.sum()), pct(int(none.sum()), n_play)))
         print("  ...of which the ball is also missing:     {:,}  ({:.1f}% of those)".format(
@@ -520,6 +767,7 @@ def main():
         print("  time base agrees with the tactical kickoffs: {}".format(
             load_smart_tagging.check_time_base(events)["agrees"]))
         report["smart_tagging"] = {"n": len(events), "team_na": no_team,
+                                   "pct_in_play_in_team_na": pct(int(in_na.sum()), n_play),
                                    "pct_in_play_uncovered": pct(int(none.sum()), n_play)}
     except (IOError, ImportError) as exc:
         print("  skipped: {}".format(str(exc).splitlines()[0]))
