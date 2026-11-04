@@ -236,6 +236,47 @@
     "pct_gt_22": 2.359984136676382,
     "slots_never_active": 3
   },
+  "team_mapping": {
+    "slots": {
+      "home": 24,
+      "away": 22,
+      "unmapped": 0,
+      "unmapped_slots_1_based": []
+    },
+    "channel_order": {
+      "verifiable": true,
+      "same_order": true
+    },
+    "duplicate_player_ids": 0,
+    "pct_detections_from_unmapped_slots": 0.0,
+    "team_coverage_pct_of_in_play_frames": {
+      "home team has nobody tracked": 0.4702342358221545,
+      "away team has nobody tracked": 0.0,
+      "home below 8 tracked": 6.806121228526284,
+      "away below 8 tracked": 5.73156990249092,
+      "either team below 8": 8.975367783604122
+    },
+    "team_call": {
+      "frames": 94214,
+      "counts": {
+        "no_player": 0,
+        "nearest_is_unmapped": 0,
+        "one_team_only": 184,
+        "unattended": 17308,
+        "ambiguous": 12252,
+        "clear": 64470
+      },
+      "baseline_compared": 94214,
+      "baseline_mismatch": 0,
+      "pct_clear_of_in_play": 40.58366958963093,
+      "pct_ball_missing_of_in_play": 40.6925725652631
+    },
+    "identity_breaks": {
+      "teleports": 54,
+      "reappearances": 14,
+      "pct_detections_suspect": 0.014625588019308234
+    }
+  },
   "parse_issues": {
     "bad_lines": 0,
     "id_not_sequential": 0,
@@ -253,6 +294,7 @@
   "smart_tagging": {
     "n": 638,
     "team_na": 36,
+    "pct_in_play_in_team_na": 15.291110873301145,
     "pct_in_play_uncovered": 17.726005149285207
   }
 }
