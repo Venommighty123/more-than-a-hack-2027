@@ -62,3 +62,6 @@ __pycache__/
 venv/
 env/
 .DS_Store
+
+# possession test outputs: frame-level tracking derived from the match data, never publish
+reports/possession_test_1/
