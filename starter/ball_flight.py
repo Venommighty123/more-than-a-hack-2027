@@ -57,7 +57,7 @@ class FlightConfig:
     landing_dv: float = -3.0              # m/s decrease in one frame -> landing / trap
     turn_angle: float = 0.6               # rad direction change ...
     turn_min_speed: float = 6.0           # ... counted only above this speed
-    min_flight_frames: int = 10
+    min_flight_frames: int = 10 
     # --- height fit (old parabolic_solver.py)
     anchor_weight: float = 25.0           # px per metre pulling ends to the tracked position
     min_obs: int = 6
