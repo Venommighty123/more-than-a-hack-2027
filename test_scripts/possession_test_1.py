@@ -1,4 +1,4 @@
-"""Possession test 1: zone-of-influence ball control with a contest rule.
+"""Possession test 1: zone-of-influence ball control with a contest rule, plus an event log.
 
 Tests the team's carry / pass / interception logic (thread of 2026-11-04):
 
@@ -26,27 +26,52 @@ Gaps and dead balls are handled crudely on purpose, so this test isolates the co
   - the published pre-kickoff stretch of the 2nd half (110808..113741) is D.
 No X is written on graded frames (X is forward-filled by the scorer anyway and costs macroF1).
 
+EVENTS (written to the JSON, StatsBomb-style names where one exists)
+  carry / hold       one player keeps the ball in their zone; carry if the ball moves >= 2 m
+  pass               the ball goes from one player to another. outcome "complete" (teammate) or
+                     "intercepted" (opponent)
+  dispossessed       the ball goes straight to an opponent with no flight (tackle, steal)
+  contest            players of both teams have the ball in their zones at the same time
+  possession_change  a change the state machine accepted (kind interception or contest)
+  change_cancelled   a pending change undone because the old team got the ball back
+  dead_ball          a D stretch, with its reason, and restart (the team that restarts play)
+  ball_not_tracked   a gap of 5+ frames with no ball position
+Player ids are track SLOTS ("Track 7" = slot 7), not people: slots swap between players.
+
 Runs on a SHORT window only: by default the first 60 s of the match (video frames 11185..12684,
 inside the public ground truth). Run from the repo root (numpy + pandas only, a few seconds):
 
     python test_scripts/possession_test_1.py
     python test_scripts/possession_test_1.py --start 13000 --seconds 60      # another minute
     python test_scripts/possession_test_1.py --contest-hold 2 --zoi-r0 2.0   # try variants
+    python test_scripts/possession_test_1.py --no-frame-detail               # smaller JSON
 
-Writes evaluation/results/possession_test_1.csv (the window labelled, every other frame X, so it
-still passes the format check) and prints:
+Writes
+  evaluation/results/possession_test_1.csv   the window labelled, every other frame X
+  reports/possession_test_1/events_<start>.json   (readable)
+       meta (window, settings, units), summary, possessions and the event list
+  reports/possession_test_1/frames_<start>.json   (compact; skipped with --no-frame-detail)
+       every frame: label, control state, holder, ball position and speed, and for every
+       tracked player position, velocity, zone-of-influence shape and ball-in-zone
+  The JSON files hold frame-level tracking, which the rules say must not be published: keep it out of
+  the public repo (reports/possession_test_1/ is git-ignored) and do not upload it to any cloud
+  AI tool.
+
+and prints
   1. the format check (same checks as the official scorer),
   2. inside the window: possession count and lengths, control-state mix, change counts by kind,
-     and every predicted label change with its video time, so you can check it in the video,
+     event counts, and every predicted label change with its video time,
   3. if the window overlaps the public 5 minutes, the true label changes in the same window and
      the share of frames that agree. A SANITY check only: do NOT tune thresholds on it (the
      rules forbid it, and one minute is far too little to tune on anyway).
 
-Only aggregate numbers are printed, so the output is safe to paste back into the project thread.
+Only aggregate numbers are printed, so the printed output is safe to paste into the project thread.
+test_scripts/visualize_events.py draws all of this onto the video.
 """
 
 import argparse
 import importlib.util
+import json
 import os
 import sys
 import time
@@ -75,14 +100,24 @@ OUT_MARGIN_M = 0.5        # ball this far past a pitch line is out of play
 SMOOTH_HALF = 2           # +/- frames of moving-average smoothing on positions
 MAX_BALL_SPEED = 40.0     # m/s; faster frame-to-frame jumps are tracking errors
 CHUNK = 20000             # frames processed at a time
+# Event detection
+TOUCH_GAP_FRAMES = 3      # a holder may drop out this many frames and still be one touch spell
+CARRY_MIN_M = 2.0         # ball displacement during a touch spell that makes it a carry
+FLIGHT_MIN_FRAMES = 3     # frames of free ball between two players that make it a pass
+SLOT_SWITCH_M = 1.0       # a "pass" to a teammate this close in under 3 frames is a slot switch
+MISSING_EVENT_FRAMES = 5  # ball gaps at least this long are logged as ball_not_tracked
+DETAIL_MAX_S = 180.0      # per-frame detail is written only for windows up to this long
 
 FPS = GAMES[GAME]["fps"]
 PITCH_L, PITCH_W = GAMES[GAME]["pitch"]
 SECOND_HALF_KICKOFF = 113742       # published in FAQ.md: graded from 110808, all D until here
 HOME, AWAY, NONE, BOTH = 0, 1, -1, 2
+TEAM_LETTER = {HOME: "H", AWAY: "A"}
+CTRL_NAME = {HOME: "home", AWAY: "away", NONE: "none", BOTH: "contest"}
 OUT_NAME = "possession_test_1"
 WINDOW_START = 11185             # 1st-half kickoff, inside the public ground truth
 WINDOW_SECONDS = 60.0
+REPORT_DIR = os.path.join(ROOT, "reports", OUT_NAME)
 
 
 # -- loading ---------------------------------------------------------------------------------
@@ -95,6 +130,11 @@ def team_of_each_track(meta_path):
         raise ValueError("expected 2 teams in {}, found {}".format(meta_path, len(team_ids)))
     slots = [player.get("teamId") for player in root.iter("Player")]
     return np.array([HOME if t == team_ids[0] else AWAY for t in slots], dtype=np.int8)
+
+
+def team_names(meta_path):
+    root = ET.parse(meta_path).getroot()
+    return [team.findtext("Name") for team in root.iter("Team")]
 
 
 def load_tracking(raw_path, n_slots, lo, hi):
@@ -175,31 +215,51 @@ def clean_ball(bx, by):
     return bx, by
 
 
-def zoi_inside(px, py, vx, vy, bx, by, args):
-    """Boolean (n_frames x n_slots): is the ball inside each player's zone of influence?"""
-    dx = bx[:, None] - px
-    dy = by[:, None] - py
+def zoi_geometry(vx, vy, args):
+    """Zone of influence shape per frame and slot: unit heading (ux, uy) and the front, rear and
+    side radii in metres. A standing player gets an arbitrary heading (the zone is a circle)."""
     speed = np.hypot(vx, vy)
     speed = np.where(np.isnan(speed), 0.0, speed)
     ratio = np.clip(speed / args.zoi_speed_max, 0.0, 1.0)
-
-    # Unit direction of travel; a standing player gets an arbitrary axis (the zone is a circle).
-    ux = np.where(speed > 0.2, np.nan_to_num(vx) / np.maximum(speed, 1e-6), 1.0)
-    uy = np.where(speed > 0.2, np.nan_to_num(vy) / np.maximum(speed, 1e-6), 0.0)
-    along = dx * ux + dy * uy
-    side = -dx * uy + dy * ux
-
+    moving = speed > 0.2
+    ux = np.where(moving, np.nan_to_num(vx) / np.maximum(speed, 1e-6), 1.0)
+    uy = np.where(moving, np.nan_to_num(vy) / np.maximum(speed, 1e-6), 0.0)
     r0 = args.zoi_r0
     front = r0 * (1.0 + ZOI_FRONT_GAIN * ratio)
     rear = r0 * (1.0 - ZOI_REAR_SHRINK * ratio)
-    lateral = r0 * (1.0 - ZOI_SIDE_SHRINK * ratio)
+    side = r0 * (1.0 - ZOI_SIDE_SHRINK * ratio)
+    return ux, uy, front, rear, side
+
+
+def zoi_q(px, py, vx, vy, bx, by, args):
+    """Normalised zone distance of the ball for each frame and slot: <= 1 means inside the zone.
+    inf where the player or ball is not seen."""
+    ux, uy, front, rear, side = zoi_geometry(vx, vy, args)
+    dx = bx[:, None] - px
+    dy = by[:, None] - py
+    along = dx * ux + dy * uy
+    lateral = -dx * uy + dy * ux
     radius_along = np.where(along >= 0, front, rear)
-    q = (along / radius_along) ** 2 + (side / lateral) ** 2
-    return np.nan_to_num(q, nan=np.inf) <= 1.0
+    q = (along / radius_along) ** 2 + (lateral / side) ** 2
+    return np.nan_to_num(q, nan=np.inf)
+
+
+def zoi_inside(px, py, vx, vy, bx, by, args):
+    """Boolean (n_frames x n_slots): is the ball inside each player's zone of influence?"""
+    return zoi_q(px, py, vx, vy, bx, by, args) <= 1.0
 
 
 def control_per_frame(px, py, bx, by, team_of_slot, args):
-    """Per frame: HOME / AWAY (sole control), BOTH (contest), NONE (free ball or no ball)."""
+    """Per-frame control. Returns a dict:
+
+      ctrl         HOME / AWAY (sole control), BOTH (contest), NONE (free ball or no ball)
+      holder       slot of the controlling player (sole control only), else -1
+      contest_h/a  slot of the home / away player nearest the ball in a contest, else -1
+      sbx, sby, bvx, bvy   smoothed ball position (m) and velocity (m/s)
+      spx, spy, vx, vy     smoothed player positions (m) and velocities (m/s)
+      q            normalised zone distance (frames x slots), <= 1 inside
+      slow         ball moving at roughly the player's speed (frames x slots)
+    """
     spx, spy = nan_smooth(px, SMOOTH_HALF), nan_smooth(py, SMOOTH_HALF)
     vx, vy = velocity(spx), velocity(spy)
     sbx, sby = nan_smooth(bx, SMOOTH_HALF), nan_smooth(by, SMOOTH_HALF)
@@ -207,42 +267,63 @@ def control_per_frame(px, py, bx, by, team_of_slot, args):
 
     home_slots = team_of_slot == HOME
     n = len(bx)
-    home = np.zeros(n, dtype=bool)
-    away = np.zeros(n, dtype=bool)
-    contest = np.zeros(n, dtype=bool)
-    for a in range(0, n, CHUNK):        # chunks keep memory to a few hundred MB
+    q_all = np.full(px.shape, np.inf, dtype=np.float32)
+    slow_all = np.zeros(px.shape, dtype=bool)
+    for a in range(0, n, CHUNK):        # chunks keep memory down on long windows
         b = min(n, a + CHUNK)
-        inside = zoi_inside(spx[a:b], spy[a:b], vx[a:b], vy[a:b], sbx[a:b], sby[a:b], args)
+        q_all[a:b] = zoi_q(spx[a:b], spy[a:b], vx[a:b], vy[a:b], sbx[a:b], sby[a:b], args)
         rel = np.hypot(bvx[a:b, None] - np.nan_to_num(vx[a:b]),
                        bvy[a:b, None] - np.nan_to_num(vy[a:b]))
         # Where the ball velocity is unknown (track edges), accept position alone.
-        slow = np.where(np.isnan(rel), True, rel <= args.rel_speed_max)
-        controls = inside & slow
-        home[a:b] = controls[:, home_slots].any(axis=1)
-        away[a:b] = controls[:, ~home_slots].any(axis=1)
-        # A contest is both teams having the ball in their zones, whatever its speed.
-        contest[a:b] = inside[:, home_slots].any(axis=1) & inside[:, ~home_slots].any(axis=1)
+        slow_all[a:b] = np.where(np.isnan(rel), True, rel <= args.rel_speed_max)
 
-    ctrl = np.full(len(bx), NONE, dtype=np.int8)
+    inside = q_all <= 1.0
+    controls = inside & slow_all
+    home = controls[:, home_slots].any(axis=1)
+    away = controls[:, ~home_slots].any(axis=1)
+    # A contest is both teams having the ball in their zones, whatever its speed.
+    contest = inside[:, home_slots].any(axis=1) & inside[:, ~home_slots].any(axis=1)
+
+    ctrl = np.full(n, NONE, dtype=np.int8)
     ctrl[home & ~away] = HOME
     ctrl[away & ~home] = AWAY
     ctrl[contest] = BOTH
-    return ctrl, sbx, sby
+
+    # Holder: the controlling player deepest inside their zone.
+    q_ctrl = np.where(controls, q_all, np.inf)
+    best = np.argmin(q_ctrl, axis=1)
+    holder = np.where(np.isin(ctrl, (HOME, AWAY)), best, -1).astype(np.int16)
+
+    def nearest_of(mask):
+        q_team = np.where(mask[None, :], q_all, np.inf)
+        slot = np.argmin(q_team, axis=1)
+        return np.where(contest, slot, -1).astype(np.int16)
+
+    return {"ctrl": ctrl, "holder": holder,
+            "contest_h": nearest_of(home_slots), "contest_a": nearest_of(~home_slots),
+            "sbx": sbx, "sby": sby, "bvx": bvx, "bvy": bvy,
+            "spx": spx, "spy": spy, "vx": vx, "vy": vy, "q": q_all, "slow": slow_all}
+
+
+DEAD_REASONS = ("", "out_of_pitch", "long_ball_gap", "before_kickoff", "until_restart")
 
 
 def dead_mask(sbx, sby, ctrl, n_frames, args):
     """True where the ball is taken as dead: long gaps and ball out of the pitch, each until the
-    next frame some team controls the ball (the restart)."""
+    next frame some team controls the ball (the restart). Also returns a reason code per frame
+    (index into DEAD_REASONS) and the number of out-of-pitch frames."""
     missing = np.isnan(sbx)
     out = (~missing) & ((sbx < -OUT_MARGIN_M) | (sbx > PITCH_L + OUT_MARGIN_M)
                         | (sby < -OUT_MARGIN_M) | (sby > PITCH_W + OUT_MARGIN_M))
     dead = out.copy()
+    reason = np.where(out, 1, 0).astype(np.int8)
 
     # Long gaps.
     edges = np.diff(np.concatenate(([0], missing.astype(np.int8), [0])))
     for start, stop in zip(np.flatnonzero(edges == 1), np.flatnonzero(edges == -1)):
         if stop - start >= args.dead_gap * FPS:
             dead[start:stop] = True
+            reason[start:stop] = 2
 
     # Extend each dead stretch until the next controlled frame.
     controlled = (ctrl == HOME) | (ctrl == AWAY)
@@ -251,18 +332,24 @@ def dead_mask(sbx, sby, ctrl, n_frames, args):
         if dead[i]:
             j = i
             while j < n_frames and (dead[j] or not controlled[j]):
+                if not dead[j]:
+                    reason[j] = 4
                 j += 1
             dead[i:j] = True
             i = j
         else:
             i += 1
-    return dead, int(out.sum())
+    return dead, reason, int(out.sum())
 
 
 # -- the possession state machine --------------------------------------------------------------
 
-def run_state_machine(ctrl, ball_x, dead, first, last, args, stats):
-    """Labels (0 H, 1 A, 2 D) for frames first..last inclusive."""
+def run_state_machine(ctrl, ball_x, dead, first, last, args, stats, log=None):
+    """Labels (0 H, 1 A, 2 D) for frames first..last inclusive.
+
+    If log is a list, every accepted and cancelled change is appended to it as a dict with
+    window-relative frame indices (start = first sole-control frame, decided = frame the check
+    passed or failed)."""
     n = last - first + 1
     labels = np.full(n, -1, dtype=np.int8)
     intercept_hold = max(1, int(round(args.intercept_hold * FPS)))
@@ -301,6 +388,10 @@ def run_state_machine(ctrl, ball_x, dead, first, last, args, stats):
             pending["ctrl"] += 1
         elif c == team and pending is not None:
             stats["cancelled_" + pending["kind"]] += 1
+            if log is not None:
+                log.append({"type": "change_cancelled", "kind": pending["kind"],
+                            "start": first + pending["start"], "decided": f,
+                            "from": team, "to": pending["team"]})
             pending = None
 
         if pending is not None:
@@ -311,6 +402,10 @@ def run_state_machine(ctrl, ball_x, dead, first, last, args, stats):
                 # Backdate: the new team has had the ball since pending["start"].
                 labels[pending["start"]:k + 1] = pending["team"]
                 stats["changes_" + pending["kind"]] += 1
+                if log is not None:
+                    log.append({"type": "possession_change", "kind": pending["kind"],
+                                "start": first + pending["start"], "decided": f,
+                                "from": team, "to": pending["team"]})
                 team, pending = pending["team"], None
                 continue
 
@@ -324,6 +419,297 @@ def run_state_machine(ctrl, ball_x, dead, first, last, args, stats):
         else:
             nxt = labels[k] if labels[k] != 2 else -1
     return labels
+
+
+# -- events ----------------------------------------------------------------------------------
+
+def runs_of(mask):
+    """[(start, stop)] half-open runs where a boolean array is True."""
+    edges = np.diff(np.concatenate(([0], mask.astype(np.int8), [0])))
+    return list(zip(np.flatnonzero(edges == 1).tolist(), np.flatnonzero(edges == -1).tolist()))
+
+
+def r2(value):
+    """Round for JSON; NaN becomes None."""
+    if value is None:
+        return None
+    value = float(value)
+    return None if not np.isfinite(value) else round(value, 2)
+
+
+def touch_spells(holder, dead):
+    """[(start, stop, slot)] runs where one slot holds the ball, bridging gaps of up to
+    TOUCH_GAP_FRAMES frames with no holder (never across a dead ball)."""
+    spells = []
+    k, n = 0, len(holder)
+    while k < n:
+        slot = holder[k]
+        if slot < 0:
+            k += 1
+            continue
+        start, end = k, k + 1
+        j = k + 1
+        while j < n and not dead[j]:
+            if holder[j] == slot:
+                end = j + 1
+            elif holder[j] >= 0 or j - end >= TOUCH_GAP_FRAMES:
+                break
+            j += 1
+        spells.append((start, end, int(slot)))
+        k = end
+    return spells
+
+
+def detect_events(res, team_of_slot, lo):
+    """StatsBomb-like event list from the per-frame control signals in res (window-relative)."""
+    holder, ctrl, dead = res["holder"], res["ctrl"], res["dead"]
+    sbx, sby = res["sbx"], res["sby"]
+    bspeed = np.hypot(res["bvx"], res["bvy"])
+    spx, spy = res["spx"], res["spy"]
+    events = []
+
+    def frame_fields(k0, k1):
+        """Absolute frames and video times of a half-open window-relative span."""
+        return {"frame_start": lo + k0, "frame_end": lo + k1 - 1,
+                "time_start": clock(lo + k0), "duration_s": r2((k1 - k0) / float(FPS))}
+
+    def loc(k):
+        return {"x": r2(sbx[k]), "y": r2(sby[k])}
+
+    # Merge touch spells where a teammate's slot takes over at the same spot (slot switch).
+    spells = touch_spells(holder, dead)
+    merged = []
+    for s in spells:
+        if merged:
+            a0, a1, aslot = merged[-1]
+            b0, b1, bslot = s
+            same_team = team_of_slot[aslot] == team_of_slot[bslot]
+            close = (b0 - a1 < FLIGHT_MIN_FRAMES and
+                     np.hypot(spx[a1 - 1, aslot] - spx[b0, bslot],
+                              spy[a1 - 1, aslot] - spy[b0, bslot]) < SLOT_SWITCH_M)
+            if aslot != bslot and same_team and close:
+                merged[-1] = (a0, b1, bslot)
+                continue
+        merged.append(s)
+
+    # Carries and holds.
+    for k0, k1, slot in merged:
+        dist = np.hypot(sbx[k1 - 1] - sbx[k0], sby[k1 - 1] - sby[k0])
+        kind = "carry" if np.isfinite(dist) and dist >= CARRY_MIN_M else "hold"
+        events.append(dict(type=kind, team=TEAM_LETTER[int(team_of_slot[slot])],
+                           player=slot + 1, start=loc(k0), end=loc(k1 - 1),
+                           distance_m=r2(dist), **frame_fields(k0, k1)))
+
+    # Transfers between consecutive spells.
+    for (a0, a1, aslot), (b0, b1, bslot) in zip(merged, merged[1:]):
+        if aslot == bslot or dead[a1:b0].any():
+            continue
+        same = team_of_slot[aslot] == team_of_slot[bslot]
+        flight = b0 - a1
+        length = np.hypot(sbx[b0] - sbx[a1 - 1], sby[b0] - sby[a1 - 1])
+        seen = ~np.isnan(sbx[a1:b0]) if flight > 0 else np.array([True])
+        top = np.nanmax(bspeed[a1 - 1:b0 + 1]) if np.isfinite(bspeed[a1 - 1:b0 + 1]).any() \
+            else np.nan
+        base = dict(team=TEAM_LETTER[int(team_of_slot[aslot])], player=aslot + 1,
+                    recipient=bslot + 1, recipient_team=TEAM_LETTER[int(team_of_slot[bslot])],
+                    start=loc(a1 - 1), end=loc(b0), length_m=r2(length),
+                    max_ball_speed_ms=r2(top), ball_seen_share=r2(seen.mean()),
+                    **frame_fields(a1 - 1, b0 + 1))
+        if same:
+            events.append(dict(type="pass", outcome="complete", **base))
+        elif flight >= FLIGHT_MIN_FRAMES:
+            events.append(dict(type="pass", outcome="intercepted", **base))
+        else:
+            events.append(dict(type="dispossessed", **base))
+
+    # Contests.
+    for k0, k1 in runs_of(ctrl == BOTH):
+        after = ctrl[k1:]
+        sole = after[np.isin(after, (HOME, AWAY))]
+        before = ctrl[:k0][np.isin(ctrl[:k0], (HOME, AWAY))]
+        events.append(dict(type="contest",
+                           home_player=int(res["contest_h"][k0]) + 1,
+                           away_player=int(res["contest_a"][k0]) + 1,
+                           location=loc(k0),
+                           team_before=TEAM_LETTER[int(before[-1])] if len(before) else None,
+                           won_by=TEAM_LETTER[int(sole[0])] if len(sole) else None,
+                           **frame_fields(k0, k1)))
+
+    # Possession changes and cancellations from the state machine.
+    for item in res["log"]:
+        k0, k1 = item["start"] - lo, item["decided"] - lo
+        events.append(dict(type=item["type"], kind=item["kind"],
+                           team_from=TEAM_LETTER[item["from"]], team_to=TEAM_LETTER[item["to"]],
+                           frame=item["start"], time=clock(item["start"]),
+                           decided_frame=item["decided"],
+                           decision_delay_s=r2((k1 - k0) / float(FPS)), location=loc(k0)))
+
+    # Dead balls.
+    for k0, k1 in runs_of(dead):
+        reasons = res["dead_reason"][k0:k1]
+        main = [DEAD_REASONS[r] for r in (1, 2, 3) if (reasons == r).any()]
+        nxt = ctrl[k1:k1 + 1]
+        restart = TEAM_LETTER.get(int(nxt[0])) if len(nxt) else None
+        events.append(dict(type="dead_ball", reason="+".join(main) or "until_restart",
+                           restart_team=restart, **frame_fields(k0, k1)))
+
+    # Ball not tracked.
+    for k0, k1 in runs_of(np.isnan(sbx)):
+        if k1 - k0 >= MISSING_EVENT_FRAMES:
+            events.append(dict(type="ball_not_tracked", last_seen=loc(k0 - 1) if k0 else None,
+                               **frame_fields(k0, k1)))
+
+    def key(e):
+        return e.get("frame_start", e.get("frame"))
+    events.sort(key=key)
+    for i, e in enumerate(events):
+        e["id"] = i + 1
+    return events
+
+
+# -- one window, end to end --------------------------------------------------------------------
+
+def analyse_window(lo, hi, args):
+    """Run the whole test on video frames lo..hi (inside one half). Returns a dict of arrays
+    (window-relative) plus the event list. Used by main() and by visualize_events.py."""
+    block = [(h, a, b) for h, a, b in half_video_blocks(GAME) if a <= lo <= b]
+    if not block:
+        raise ValueError("start frame {} is not inside a half; halves are {}".format(
+            lo, [(a, b) for _, a, b in half_video_blocks(GAME)]))
+    half, _, half_end = block[0]
+    hi = min(hi, half_end)
+
+    meta_path, raw_path = require(["atd_meta", "atd_raw"])
+    team_of_slot = team_of_each_track(meta_path)
+    px, py, bx, by = load_tracking(raw_path, len(team_of_slot), lo, hi)
+    bx, by = clean_ball(bx, by)
+    n = hi - lo + 1
+
+    res = control_per_frame(px, py, bx, by, team_of_slot, args)
+    dead, reason, n_out = dead_mask(res["sbx"], res["sby"], res["ctrl"], n, args)
+    if half == 2:
+        k_end = min(n, SECOND_HALF_KICKOFF - lo)
+        if k_end > 0:
+            dead[:k_end] = True
+            reason[:k_end] = 3
+
+    stats = {k: 0 for k in ("changes_interception", "changes_contest",
+                            "cancelled_interception", "cancelled_contest")}
+    log = []
+    labels = run_state_machine(res["ctrl"], res["sbx"], dead, 0, n - 1, args, stats, log)
+    for item in log:                       # window-relative -> absolute frames
+        item["start"] += lo
+        item["decided"] += lo
+
+    res.update({"lo": lo, "hi": hi, "n": n, "half": half, "labels": labels, "dead": dead,
+                "dead_reason": reason, "n_out": n_out, "stats": stats, "log": log,
+                "team_of_slot": team_of_slot, "team_names": team_names(meta_path),
+                "ball_seen": float(np.mean(~np.isnan(bx)))})
+    res["events"] = detect_events(res, team_of_slot, lo)
+    return res
+
+
+def possessions_of(labels, lo):
+    out = []
+    for k0, k1 in runs_of(labels != 2):
+        sub = labels[k0:k1]
+        breaks = np.flatnonzero(sub[1:] != sub[:-1]) + 1
+        bounds = np.concatenate(([0], breaks, [len(sub)]))
+        for a, b in zip(bounds[:-1], bounds[1:]):
+            out.append({"team": TEAM_LETTER[int(sub[a])], "frame_start": lo + k0 + int(a),
+                        "frame_end": lo + k0 + int(b) - 1, "time_start": clock(lo + k0 + int(a)),
+                        "duration_s": r2((b - a) / float(FPS))})
+    for i, p in enumerate(out):
+        p["id"] = i + 1
+    return out
+
+
+def write_json(res, args, path, detail):
+    lo, n = res["lo"], res["n"]
+    team_of_slot = res["team_of_slot"]
+    ev_counts = {}
+    for e in res["events"]:
+        name = e["type"] + ("_" + e["outcome"] if "outcome" in e else "")
+        ev_counts[name] = ev_counts.get(name, 0) + 1
+    labels = res["labels"]
+    doc = {
+        "meta": {
+            "script": "test_scripts/possession_test_1.py",
+            "game": GAME,
+            "teams": {"H": res["team_names"][0] if res["team_names"] else "home",
+                      "A": res["team_names"][1] if len(res["team_names"]) > 1 else "away"},
+            "window": {"frame_start": lo, "frame_end": res["hi"], "half": res["half"],
+                       "time_start": clock(lo), "time_end": clock(res["hi"]),
+                       "seconds": r2(n / float(FPS))},
+            "settings": {k: v for k, v in vars(args).items() if k not in ("out",)},
+            "constants": {"zoi_front_gain": ZOI_FRONT_GAIN, "zoi_side_shrink": ZOI_SIDE_SHRINK,
+                          "zoi_rear_shrink": ZOI_REAR_SHRINK, "min_ctrl_s": MIN_CTRL_S,
+                          "contest_memory_s": CONTEST_MEMORY_S, "carry_min_m": CARRY_MIN_M,
+                          "touch_gap_frames": TOUCH_GAP_FRAMES,
+                          "flight_min_frames": FLIGHT_MIN_FRAMES},
+            "units": {"x": "metres along the pitch, 0 to {}".format(PITCH_L),
+                      "y": "metres across the pitch, 0 to {}".format(PITCH_W),
+                      "speed": "m/s", "frame": "tactical video frame, 25 per second",
+                      "time": "video time mm:ss.ss from the first video frame",
+                      "player": "track slot 1..46 (not a person; slots swap players)",
+                      "zoi": "ellipse: front / rear radius along heading_deg, side radius "
+                             "across it; ball_in_zone means q <= 1"},
+            "warning": "Frame-level tracking derived from the match data. Do not publish or "
+                       "upload (RULES.md).",
+        },
+        "summary": dict(
+            possessions=int(len(possessions_of(labels, lo))),
+            label_share={L: r2(np.mean(labels == i)) for i, L in enumerate("HAD")},
+            control_share={CTRL_NAME[v]: r2(np.mean(res["ctrl"] == v))
+                           for v in (HOME, AWAY, BOTH, NONE)},
+            ball_tracked_share=r2(res["ball_seen"]),
+            ball_out_of_pitch_frames=res["n_out"],
+            event_counts=ev_counts, **res["stats"]),
+        "possessions": possessions_of(labels, lo),
+        "events": res["events"],
+    }
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if detail:
+        ux, uy, front, rear, side = zoi_geometry(res["vx"], res["vy"], args)
+        heading = np.degrees(np.arctan2(uy, ux))
+        frames = []
+        for k in range(n):
+            players = []
+            for s in np.flatnonzero(~np.isnan(res["spx"][k])):
+                q = res["q"][k, s]
+                players.append({
+                    "player": int(s) + 1, "team": TEAM_LETTER[int(team_of_slot[s])],
+                    "x": r2(res["spx"][k, s]), "y": r2(res["spy"][k, s]),
+                    "vx": r2(res["vx"][k, s]), "vy": r2(res["vy"][k, s]),
+                    "speed": r2(np.hypot(res["vx"][k, s], res["vy"][k, s])),
+                    "zoi": {"heading_deg": r2(heading[k, s]), "front_m": r2(front[k, s]),
+                            "rear_m": r2(rear[k, s]), "side_m": r2(side[k, s])},
+                    "zoi_q": r2(q) if np.isfinite(q) and q < 25 else None,
+                    "ball_in_zone": bool(q <= 1.0),
+                    "ball_speed_matches": bool(res["slow"][k, s]) if q <= 1.0 else None,
+                })
+            hold = int(res["holder"][k])
+            frames.append({
+                "frame": lo + k, "time": clock(lo + k), "label": "HAD"[labels[k]],
+                "control": CTRL_NAME[int(res["ctrl"][k])],
+                "holder": hold + 1 if hold >= 0 else None,
+                "dead": bool(res["dead"][k]),
+                "dead_reason": DEAD_REASONS[int(res["dead_reason"][k])] or None,
+                "ball": {"x": r2(res["sbx"][k]), "y": r2(res["sby"][k]),
+                         "vx": r2(res["bvx"][k]), "vy": r2(res["bvy"][k]),
+                         "speed": r2(np.hypot(res["bvx"][k], res["bvy"][k])),
+                         "tracked": bool(np.isfinite(res["sbx"][k]))},
+                "players": players,
+            })
+        frames_path = path.replace("events_", "frames_") if "events_" in path \
+            else path.replace(".json", "_frames.json")
+        doc["meta"]["frames_file"] = os.path.basename(frames_path)
+        with open(frames_path, "w") as handle:      # compact: about 5 MB a minute
+            json.dump({"meta": doc["meta"], "frames": frames}, handle, separators=(",", ":"))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as handle:
+        json.dump(doc, handle, indent=2)
+    return ev_counts
 
 
 # -- reporting -------------------------------------------------------------------------------
@@ -360,55 +746,45 @@ def print_changes(pm, codes, runs, title):
                                                        names[to]))
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--start", type=int, default=WINDOW_START,
-                        help="first video frame of the test window (default: 1st-half kickoff)")
-    parser.add_argument("--seconds", type=float, default=WINDOW_SECONDS,
-                        help="length of the test window in seconds (default 60)")
+def add_settings_args(parser):
+    """The thresholds, shared with visualize_events.py."""
     parser.add_argument("--zoi-r0", type=float, default=ZOI_R0_M)
     parser.add_argument("--zoi-speed-max", type=float, default=ZOI_SPEED_MAX)
     parser.add_argument("--rel-speed-max", type=float, default=REL_SPEED_MAX)
     parser.add_argument("--intercept-hold", type=float, default=INTERCEPT_HOLD_S)
     parser.add_argument("--contest-hold", type=float, default=CONTEST_HOLD_S)
     parser.add_argument("--dead-gap", type=float, default=DEAD_GAP_S)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("--start", type=int, default=WINDOW_START,
+                        help="first video frame of the test window (default: 1st-half kickoff)")
+    parser.add_argument("--seconds", type=float, default=WINDOW_SECONDS,
+                        help="length of the test window in seconds (default 60)")
+    add_settings_args(parser)
     parser.add_argument("--out", default=None, help="output CSV path")
+    parser.add_argument("--json", default=None, help="output JSON path")
+    parser.add_argument("--no-frame-detail", action="store_true",
+                        help="leave the per-frame, per-player section out of the JSON")
     args = parser.parse_args()
 
-    # The window must sit inside one half.
     lo = args.start
     hi = lo + int(round(args.seconds * FPS)) - 1
-    block = [(h, a, b) for h, a, b in half_video_blocks(GAME) if a <= lo <= b]
-    if not block:
-        sys.exit("start frame {} is not inside a half; halves are {}".format(
-            lo, [(a, b) for _, a, b in half_video_blocks(GAME)]))
-    half, _, half_end = block[0]
-    hi = min(hi, half_end)
-    print("test window: video frames {}..{} ({:.0f} s, half {}, video {} to {})".format(
-        lo, hi, (hi - lo + 1) / float(FPS), half, clock(lo), clock(hi)))
-
     t0 = time.time()
-    meta_path, raw_path = require(["atd_meta", "atd_raw"])
-    n_frames = source_frames("tactical")
-    team_of_slot = team_of_each_track(meta_path)
-    px, py, bx, by = load_tracking(raw_path, len(team_of_slot), lo, hi)
-    bx, by = clean_ball(bx, by)
-    n = hi - lo + 1
-    print("  read {} frames in {:.1f} s; ball visible on {:.0%} of them".format(
-        n, time.time() - t0, float(np.mean(~np.isnan(bx)))))
-
-    ctrl, sbx, sby = control_per_frame(px, py, bx, by, team_of_slot, args)
-    dead, n_out = dead_mask(sbx, sby, ctrl, n, args)
-    if half == 2:
-        k_end = min(n, SECOND_HALF_KICKOFF - lo)
-        if k_end > 0:
-            dead[:k_end] = True
-
-    stats = {k: 0 for k in ("changes_interception", "changes_contest",
-                            "cancelled_interception", "cancelled_contest")}
-    labels = run_state_machine(ctrl, sbx, dead, 0, n - 1, args, stats)
+    try:
+        res = analyse_window(lo, hi, args)
+    except ValueError as error:
+        sys.exit(str(error))
+    hi, n = res["hi"], res["n"]
+    print("test window: video frames {}..{} ({:.0f} s, half {}, video {} to {})".format(
+        lo, hi, n / float(FPS), res["half"], clock(lo), clock(hi)))
+    print("  analysed in {:.1f} s; ball visible on {:.0%} of frames".format(
+        time.time() - t0, res["ball_seen"]))
+    labels, ctrl, stats = res["labels"], res["ctrl"], res["stats"]
 
     # Full-length file: the window is labelled, everything else is X, so it still validates.
+    n_frames = source_frames("tactical")
     letters = np.full(n_frames, "X", dtype="<U1")
     letters[lo:hi + 1] = np.array(["H", "A", "D"])[labels]
     out_path = args.out or os.path.join(ROOT, "evaluation", "results", OUT_NAME + ".csv")
@@ -417,6 +793,16 @@ def main():
         handle.write("frame,label\n")
         handle.writelines("{},{}\n".format(i, v) for i, v in enumerate(letters))
     print("  wrote {}".format(out_path))
+
+    json_path = args.json or os.path.join(REPORT_DIR, "events_{}.json".format(lo))
+    detail = not args.no_frame_detail and n / float(FPS) <= DETAIL_MAX_S
+    if not args.no_frame_detail and not detail:
+        print("  note: window over {:.0f} s, per-frame detail left out of the JSON".format(
+            DETAIL_MAX_S))
+    ev_counts = write_json(res, args, json_path, detail)
+    print("  wrote {}".format(json_path))
+    if detail:
+        print("  wrote {}".format(json_path.replace("events_", "frames_")))
 
     pm = load_metrics()
     table = pm.read_label_csv(out_path)
@@ -433,11 +819,12 @@ def main():
         *[float(np.mean(labels == i)) for i in range(3)]))
     print("  control frames: home {:.0%}, away {:.0%}, contest {:.0%}, free/no ball {:.0%}".format(
         *[float(np.mean(ctrl == v)) for v in (HOME, AWAY, BOTH, NONE)]))
-    print("  ball off the pitch on {} frames".format(n_out))
+    print("  ball off the pitch on {} frames".format(res["n_out"]))
     print("  changes accepted: {} interceptions, {} after contests".format(
         stats["changes_interception"], stats["changes_contest"]))
     print("  changes cancelled (old team got it back): {} interceptions, {} contests".format(
         stats["cancelled_interception"], stats["cancelled_contest"]))
+    print("  events: " + ", ".join("{} {}".format(v, k) for k, v in sorted(ev_counts.items())))
     print_changes(pm, codes, runs, "predicted label changes")
 
     # Public ground truth, restricted to the window. Sanity check only.
@@ -460,7 +847,7 @@ def main():
             print("  (spellF1 is not shown: on one minute it is too noisy to mean anything)")
 
     print("\nsettings: " + ", ".join("{}={}".format(k, v) for k, v in vars(args).items()
-                                     if k != "out"))
+                                     if k not in ("out", "json")))
     print("total time {:.1f} s".format(time.time() - t0))
 
 
