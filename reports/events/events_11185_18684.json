@@ -1,0 +1,6856 @@
+{
+ "meta": {
+  "schema_version": "1.0.0",
+  "game": "BAR-ATH",
+  "fps": 25,
+  "pitch_m": [
+   105.3,
+   68.0
+  ],
+  "teams": {
+   "H": "Barcelona",
+   "A": "Atletic Club"
+  },
+  "windows": [
+   {
+    "period": 1,
+    "frame_start": 11185,
+    "frame_end": 18684,
+    "time_start": "07:27.40",
+    "time_end": "12:27.36",
+    "events": 143
+   }
+  ],
+  "attack_direction": {
+   "1": {
+    "H": "+x",
+    "A": "-x",
+    "source": "kickoff_formation",
+    "home_mean_x_m": 41.2,
+    "away_mean_x_m": 54.16
+   }
+  },
+  "thresholds": {
+   "start": 11185,
+   "seconds": 300.0,
+   "zoi_r0": 1.5,
+   "rel_speed_max": 4.0,
+   "max_gap": 12,
+   "dead_gap": 10.0,
+   "min_spell": 2,
+   "max_flight_frames": 75,
+   "min_pass_m": 2.0,
+   "short_pass_m": 12.0,
+   "long_pass_m": 30.0,
+   "switch_min_m": 25.0,
+   "carry_min_m": 2.0,
+   "min_hold_s": 0.5,
+   "pressure_m": 2.5,
+   "dribble_m": 2.0,
+   "min_change_hold_s": 0.3,
+   "duel_min_frames": 5,
+   "shot_min_speed": 14.0,
+   "shot_max_dist_m": 40.0,
+   "shot_goal_margin_m": 2.0
+  },
+  "event_counts": {
+   "carry": 44,
+   "pass": 49,
+   "duel": 9,
+   "interception": 7,
+   "possession_change": 7,
+   "hold": 19,
+   "ball_out_of_play": 2,
+   "dead_ball": 2,
+   "foul_candidate": 2,
+   "restart": 2
+  },
+  "warnings": [
+   "Automatic, uncorrected tracking: events are evidence, not ground truth.",
+   "foul_candidate is a Free Kick tag + preceding duel/tackle; offside and handball look the same.",
+   "Derived from the match data: do not publish or upload to any cloud AI tool (RULES.md)."
+  ]
+ },
+ "events": [
+  {
+   "id": "E00001",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11415,
+   "frame_end": 11461,
+   "time_start": "07:36.60",
+   "duration_s": 1.88,
+   "team": "A",
+   "player_slot": 45,
+   "start_location": {
+    "x_m": 22.69,
+    "y_m": 4.47,
+    "x_att_m": 82.61,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 16.64,
+    "y_m": 2.44,
+    "x_att_m": 88.66,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 6.38,
+    "progressive_m": 6.06,
+    "mean_speed_ms": 3.4,
+    "nearest_opponent_min_m": 2.03,
+    "under_pressure": true,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00002",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11461,
+   "frame_end": 11478,
+   "time_start": "07:38.44",
+   "duration_s": 0.72,
+   "team": "A",
+   "player_slot": 45,
+   "start_location": {
+    "x_m": 16.64,
+    "y_m": 2.44,
+    "x_att_m": 88.66,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 13.95,
+    "y_m": 2.2,
+    "x_att_m": 91.35,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "intercepted",
+    "recipient_slot": 3,
+    "recipient_team": "H",
+    "length_m": 2.7,
+    "length_class": "short",
+    "direction": "forward",
+    "angle_deg": null,
+    "progressive_m": 2.69,
+    "flight_frames": 16,
+    "max_ball_speed_ms": 4.84,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 2.03,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00003",
+   "type": "duel",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11462,
+   "frame_end": 11477,
+   "time_start": "07:38.48",
+   "duration_s": 0.64,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": 16.51,
+    "y_m": 2.4,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": 14.14,
+    "y_m": 2.17,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "home_slot": 3,
+    "away_slot": 45,
+    "winner_team": "H",
+    "min_player_distance_m": 1.45
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00004",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11478,
+   "frame_end": 11504,
+   "time_start": "07:39.12",
+   "duration_s": 1.08,
+   "team": "H",
+   "player_slot": 3,
+   "start_location": {
+    "x_m": 13.95,
+    "y_m": 2.2,
+    "x_att_m": 13.95,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 10.24,
+    "y_m": 3.56,
+    "x_att_m": 10.24,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.96,
+    "progressive_m": -3.71,
+    "mean_speed_ms": 3.66,
+    "nearest_opponent_min_m": 1.56,
+    "under_pressure": true,
+    "is_dribble": true,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00005",
+   "type": "interception",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11478,
+   "frame_end": 11479,
+   "time_start": "07:39.12",
+   "duration_s": 0.08,
+   "team": "H",
+   "player_slot": 3,
+   "start_location": {
+    "x_m": 13.95,
+    "y_m": 2.2,
+    "x_att_m": 13.95,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 13.95,
+    "y_m": 2.2,
+    "x_att_m": 13.95,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "intercepted_pass_id": "E00002",
+    "passer_slot": 45,
+    "passer_team": "A",
+    "flight_frames": 16,
+    "distance_from_passer_m": 2.7
+   },
+   "related_event_ids": [
+    "E00002"
+   ]
+  },
+  {
+   "id": "E00006",
+   "type": "possession_change",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11478,
+   "frame_end": 11479,
+   "time_start": "07:39.12",
+   "duration_s": 0.08,
+   "team": "H",
+   "player_slot": 3,
+   "start_location": {
+    "x_m": 13.95,
+    "y_m": 2.2,
+    "x_att_m": 13.95,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 13.95,
+    "y_m": 2.2,
+    "x_att_m": 13.95,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "from_team": "A",
+    "to_team": "H",
+    "kind": "contest",
+    "trigger_event_id": "E00005",
+    "flight_frames": 16,
+    "new_team_hold_s": 1.08
+   },
+   "related_event_ids": [
+    "E00005"
+   ]
+  },
+  {
+   "id": "E00007",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11620,
+   "frame_end": 11689,
+   "time_start": "07:44.80",
+   "duration_s": 2.8,
+   "team": "H",
+   "player_slot": 15,
+   "start_location": {
+    "x_m": 10.24,
+    "y_m": 28.48,
+    "x_att_m": 10.24,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "end_location": {
+    "x_m": 9.16,
+    "y_m": 27.82,
+    "x_att_m": 9.16,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 2.29,
+    "under_pressure": true,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00008",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11689,
+   "frame_end": 11704,
+   "time_start": "07:47.56",
+   "duration_s": 0.64,
+   "team": "H",
+   "player_slot": 15,
+   "start_location": {
+    "x_m": 9.16,
+    "y_m": 27.82,
+    "x_att_m": 9.16,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "end_location": {
+    "x_m": 8.75,
+    "y_m": 27.33,
+    "x_att_m": 8.75,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "intercepted",
+    "recipient_slot": 46,
+    "recipient_team": "A",
+    "length_m": 0.64,
+    "length_class": "short",
+    "direction": "lateral",
+    "angle_deg": null,
+    "progressive_m": -0.42,
+    "flight_frames": 14,
+    "max_ball_speed_ms": 2.05,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 2.29,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00009",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11704,
+   "frame_end": 11720,
+   "time_start": "07:48.16",
+   "duration_s": 0.68,
+   "team": "A",
+   "player_slot": 46,
+   "start_location": {
+    "x_m": 8.75,
+    "y_m": 27.33,
+    "x_att_m": 96.55,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 8.55,
+    "y_m": 27.29,
+    "x_att_m": 96.75,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 2.56,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00010",
+   "type": "interception",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11704,
+   "frame_end": 11705,
+   "time_start": "07:48.16",
+   "duration_s": 0.08,
+   "team": "A",
+   "player_slot": 46,
+   "start_location": {
+    "x_m": 8.75,
+    "y_m": 27.33,
+    "x_att_m": 96.55,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 8.75,
+    "y_m": 27.33,
+    "x_att_m": 96.55,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "intercepted_pass_id": "E00008",
+    "passer_slot": 15,
+    "passer_team": "H",
+    "flight_frames": 14,
+    "distance_from_passer_m": 0.64
+   },
+   "related_event_ids": [
+    "E00008"
+   ]
+  },
+  {
+   "id": "E00011",
+   "type": "possession_change",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11704,
+   "frame_end": 11705,
+   "time_start": "07:48.16",
+   "duration_s": 0.08,
+   "team": "A",
+   "player_slot": 46,
+   "start_location": {
+    "x_m": 8.75,
+    "y_m": 27.33,
+    "x_att_m": 96.55,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 8.75,
+    "y_m": 27.33,
+    "x_att_m": 96.55,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "from_team": "H",
+    "to_team": "A",
+    "kind": "interception",
+    "trigger_event_id": "E00010",
+    "flight_frames": 14,
+    "new_team_hold_s": 0.68
+   },
+   "related_event_ids": [
+    "E00010"
+   ]
+  },
+  {
+   "id": "E00012",
+   "type": "duel",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11799,
+   "frame_end": 11807,
+   "time_start": "07:51.96",
+   "duration_s": 0.36,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": 22.87,
+    "y_m": 57.37,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": 22.87,
+    "y_m": 56.73,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "home_slot": 4,
+    "away_slot": 29,
+    "winner_team": "H",
+    "min_player_distance_m": 1.4
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00013",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11838,
+   "frame_end": 11870,
+   "time_start": "07:53.52",
+   "duration_s": 1.32,
+   "team": "H",
+   "player_slot": 4,
+   "start_location": {
+    "x_m": 21.83,
+    "y_m": 51.22,
+    "x_att_m": 21.83,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 20.88,
+    "y_m": 45.91,
+    "x_att_m": 20.88,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 5.39,
+    "progressive_m": -0.95,
+    "mean_speed_ms": 4.08,
+    "nearest_opponent_min_m": 3.22,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00014",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11870,
+   "frame_end": 11938,
+   "time_start": "07:54.80",
+   "duration_s": 2.76,
+   "team": "H",
+   "player_slot": 4,
+   "start_location": {
+    "x_m": 20.88,
+    "y_m": 45.91,
+    "x_att_m": 20.88,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 24.82,
+    "y_m": 4.62,
+    "x_att_m": 24.82,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 15,
+    "recipient_team": "H",
+    "length_m": 41.48,
+    "length_class": "long",
+    "direction": "lateral",
+    "angle_deg": -84.55,
+    "progressive_m": 3.94,
+    "flight_frames": 67,
+    "max_ball_speed_ms": 20.22,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": true,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 6.41,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00015",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11938,
+   "frame_end": 11981,
+   "time_start": "07:57.52",
+   "duration_s": 1.76,
+   "team": "H",
+   "player_slot": 15,
+   "start_location": {
+    "x_m": 24.82,
+    "y_m": 4.62,
+    "x_att_m": 24.82,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 24.67,
+    "y_m": 5.48,
+    "x_att_m": 24.67,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 8.57,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00016",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 11981,
+   "frame_end": 12029,
+   "time_start": "07:59.24",
+   "duration_s": 1.96,
+   "team": "H",
+   "player_slot": 15,
+   "start_location": {
+    "x_m": 24.67,
+    "y_m": 5.48,
+    "x_att_m": 24.67,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 17.6,
+    "y_m": 18.08,
+    "x_att_m": 17.6,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 11,
+    "recipient_team": "H",
+    "length_m": 14.45,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 119.3,
+    "progressive_m": -7.07,
+    "flight_frames": 47,
+    "max_ball_speed_ms": 10.18,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 8.57,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00017",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12029,
+   "frame_end": 12093,
+   "time_start": "08:01.16",
+   "duration_s": 2.6,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 17.6,
+    "y_m": 18.08,
+    "x_att_m": 17.6,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 21.8,
+    "y_m": 23.9,
+    "x_att_m": 21.8,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 7.18,
+    "progressive_m": 4.2,
+    "mean_speed_ms": 2.76,
+    "nearest_opponent_min_m": 9.02,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00018",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12093,
+   "frame_end": 12136,
+   "time_start": "08:03.72",
+   "duration_s": 1.76,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 21.8,
+    "y_m": 23.9,
+    "x_att_m": 21.8,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 20.91,
+    "y_m": 45.14,
+    "x_att_m": 20.91,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 2,
+    "recipient_team": "H",
+    "length_m": 21.26,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 92.41,
+    "progressive_m": -0.89,
+    "flight_frames": 42,
+    "max_ball_speed_ms": 17.83,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 9.02,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00019",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12136,
+   "frame_end": 12180,
+   "time_start": "08:05.44",
+   "duration_s": 1.8,
+   "team": "H",
+   "player_slot": 2,
+   "start_location": {
+    "x_m": 20.91,
+    "y_m": 45.14,
+    "x_att_m": 20.91,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 21.78,
+    "y_m": 45.38,
+    "x_att_m": 21.78,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 8.05,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00020",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12180,
+   "frame_end": 12223,
+   "time_start": "08:07.20",
+   "duration_s": 1.76,
+   "team": "H",
+   "player_slot": 2,
+   "start_location": {
+    "x_m": 21.78,
+    "y_m": 45.38,
+    "x_att_m": 21.78,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 23.8,
+    "y_m": 19.01,
+    "x_att_m": 23.8,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 11,
+    "recipient_team": "H",
+    "length_m": 26.45,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": -85.61,
+    "progressive_m": 2.02,
+    "flight_frames": 42,
+    "max_ball_speed_ms": 21.77,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": true,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 8.05,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00021",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12223,
+   "frame_end": 12240,
+   "time_start": "08:08.92",
+   "duration_s": 0.72,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 23.8,
+    "y_m": 19.01,
+    "x_att_m": 23.8,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 24.98,
+    "y_m": 16.77,
+    "x_att_m": 24.98,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.53,
+    "progressive_m": 1.18,
+    "mean_speed_ms": 3.51,
+    "nearest_opponent_min_m": 7.51,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00022",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12240,
+   "frame_end": 12279,
+   "time_start": "08:09.60",
+   "duration_s": 1.6,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 24.98,
+    "y_m": 16.77,
+    "x_att_m": 24.98,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 34.02,
+    "y_m": 1.94,
+    "x_att_m": 34.02,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 15,
+    "recipient_team": "H",
+    "length_m": 17.37,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": -58.66,
+    "progressive_m": 9.03,
+    "flight_frames": 38,
+    "max_ball_speed_ms": 15.7,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 7.51,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00023",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12279,
+   "frame_end": 12316,
+   "time_start": "08:11.16",
+   "duration_s": 1.52,
+   "team": "H",
+   "player_slot": 15,
+   "start_location": {
+    "x_m": 34.02,
+    "y_m": 1.94,
+    "x_att_m": 34.02,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 33.45,
+    "y_m": 1.81,
+    "x_att_m": 33.45,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 3.64,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00024",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12316,
+   "frame_end": 12364,
+   "time_start": "08:12.64",
+   "duration_s": 1.96,
+   "team": "H",
+   "player_slot": 15,
+   "start_location": {
+    "x_m": 33.45,
+    "y_m": 1.81,
+    "x_att_m": 33.45,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 18.03,
+    "y_m": 15.98,
+    "x_att_m": 18.03,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 11,
+    "recipient_team": "H",
+    "length_m": 20.94,
+    "length_class": "medium",
+    "direction": "backward",
+    "angle_deg": 137.41,
+    "progressive_m": -15.41,
+    "flight_frames": 47,
+    "max_ball_speed_ms": 15.3,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 3.64,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00025",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12364,
+   "frame_end": 12410,
+   "time_start": "08:14.56",
+   "duration_s": 1.88,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 18.03,
+    "y_m": 15.98,
+    "x_att_m": 18.03,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 20.92,
+    "y_m": 18.69,
+    "x_att_m": 20.92,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.96,
+    "progressive_m": 2.89,
+    "mean_speed_ms": 2.11,
+    "nearest_opponent_min_m": 8.91,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00026",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12410,
+   "frame_end": 12436,
+   "time_start": "08:16.40",
+   "duration_s": 1.08,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 20.92,
+    "y_m": 18.69,
+    "x_att_m": 20.92,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 27.24,
+    "y_m": 17.55,
+    "x_att_m": 27.24,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "intercepted",
+    "recipient_slot": 45,
+    "recipient_team": "A",
+    "length_m": 6.42,
+    "length_class": "short",
+    "direction": "forward",
+    "angle_deg": null,
+    "progressive_m": 6.32,
+    "flight_frames": 25,
+    "max_ball_speed_ms": 7.39,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 8.91,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00027",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12436,
+   "frame_end": 12451,
+   "time_start": "08:17.44",
+   "duration_s": 0.64,
+   "team": "A",
+   "player_slot": 45,
+   "start_location": {
+    "x_m": 27.24,
+    "y_m": 17.55,
+    "x_att_m": 78.06,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 27.03,
+    "y_m": 15.21,
+    "x_att_m": 78.27,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.36,
+    "progressive_m": 0.21,
+    "mean_speed_ms": 3.68,
+    "nearest_opponent_min_m": 2.25,
+    "under_pressure": true,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00028",
+   "type": "interception",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12436,
+   "frame_end": 12437,
+   "time_start": "08:17.44",
+   "duration_s": 0.08,
+   "team": "A",
+   "player_slot": 45,
+   "start_location": {
+    "x_m": 27.24,
+    "y_m": 17.55,
+    "x_att_m": 78.06,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 27.24,
+    "y_m": 17.55,
+    "x_att_m": 78.06,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "intercepted_pass_id": "E00026",
+    "passer_slot": 11,
+    "passer_team": "H",
+    "flight_frames": 25,
+    "distance_from_passer_m": 6.42
+   },
+   "related_event_ids": [
+    "E00026"
+   ]
+  },
+  {
+   "id": "E00029",
+   "type": "possession_change",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12436,
+   "frame_end": 12437,
+   "time_start": "08:17.44",
+   "duration_s": 0.08,
+   "team": "A",
+   "player_slot": 45,
+   "start_location": {
+    "x_m": 27.24,
+    "y_m": 17.55,
+    "x_att_m": 78.06,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 27.24,
+    "y_m": 17.55,
+    "x_att_m": 78.06,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "from_team": "H",
+    "to_team": "A",
+    "kind": "interception",
+    "trigger_event_id": "E00028",
+    "flight_frames": 25,
+    "new_team_hold_s": 0.64
+   },
+   "related_event_ids": [
+    "E00028"
+   ]
+  },
+  {
+   "id": "E00030",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12451,
+   "frame_end": 12483,
+   "time_start": "08:18.04",
+   "duration_s": 1.32,
+   "team": "A",
+   "player_slot": 45,
+   "start_location": {
+    "x_m": 27.03,
+    "y_m": 15.21,
+    "x_att_m": 78.27,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 21.07,
+    "y_m": 21.03,
+    "x_att_m": 84.23,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "intercepted",
+    "recipient_slot": 11,
+    "recipient_team": "H",
+    "length_m": 8.33,
+    "length_class": "short",
+    "direction": "forward",
+    "angle_deg": null,
+    "progressive_m": 5.96,
+    "flight_frames": 31,
+    "max_ball_speed_ms": 8.79,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 2.25,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00031",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12483,
+   "frame_end": 12511,
+   "time_start": "08:19.32",
+   "duration_s": 1.16,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 21.07,
+    "y_m": 21.03,
+    "x_att_m": 21.07,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 22.7,
+    "y_m": 24.02,
+    "x_att_m": 22.7,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.41,
+    "progressive_m": 1.63,
+    "mean_speed_ms": 2.94,
+    "nearest_opponent_min_m": 7.81,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00032",
+   "type": "interception",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12483,
+   "frame_end": 12484,
+   "time_start": "08:19.32",
+   "duration_s": 0.08,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 21.07,
+    "y_m": 21.03,
+    "x_att_m": 21.07,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 21.07,
+    "y_m": 21.03,
+    "x_att_m": 21.07,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "intercepted_pass_id": "E00030",
+    "passer_slot": 45,
+    "passer_team": "A",
+    "flight_frames": 31,
+    "distance_from_passer_m": 8.33
+   },
+   "related_event_ids": [
+    "E00030"
+   ]
+  },
+  {
+   "id": "E00033",
+   "type": "possession_change",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12483,
+   "frame_end": 12484,
+   "time_start": "08:19.32",
+   "duration_s": 0.08,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 21.07,
+    "y_m": 21.03,
+    "x_att_m": 21.07,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 21.07,
+    "y_m": 21.03,
+    "x_att_m": 21.07,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "from_team": "A",
+    "to_team": "H",
+    "kind": "interception",
+    "trigger_event_id": "E00032",
+    "flight_frames": 31,
+    "new_team_hold_s": 1.16
+   },
+   "related_event_ids": [
+    "E00032"
+   ]
+  },
+  {
+   "id": "E00034",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12511,
+   "frame_end": 12565,
+   "time_start": "08:20.44",
+   "duration_s": 2.2,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 22.7,
+    "y_m": 24.02,
+    "x_att_m": 22.7,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 31.61,
+    "y_m": 50.02,
+    "x_att_m": 31.61,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 2,
+    "recipient_team": "H",
+    "length_m": 27.48,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 71.09,
+    "progressive_m": 8.91,
+    "flight_frames": 53,
+    "max_ball_speed_ms": 16.61,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": true,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 7.81,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00035",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12565,
+   "frame_end": 12587,
+   "time_start": "08:22.60",
+   "duration_s": 0.92,
+   "team": "H",
+   "player_slot": 2,
+   "start_location": {
+    "x_m": 31.61,
+    "y_m": 50.02,
+    "x_att_m": 31.61,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 34.49,
+    "y_m": 52.8,
+    "x_att_m": 34.49,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 4.0,
+    "progressive_m": 2.88,
+    "mean_speed_ms": 4.35,
+    "nearest_opponent_min_m": 7.18,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00036",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 12706,
+   "frame_end": 12722,
+   "time_start": "08:28.24",
+   "duration_s": 0.68,
+   "team": "A",
+   "player_slot": 30,
+   "start_location": {
+    "x_m": 64.17,
+    "y_m": 38.9,
+    "x_att_m": 41.13,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 64.02,
+    "y_m": 38.6,
+    "x_att_m": 41.28,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 3.47,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00037",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13005,
+   "frame_end": 13023,
+   "time_start": "08:40.20",
+   "duration_s": 0.76,
+   "team": "H",
+   "player_slot": 2,
+   "start_location": {
+    "x_m": 22.33,
+    "y_m": 50.86,
+    "x_att_m": 22.33,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 22.53,
+    "y_m": 47.76,
+    "x_att_m": 22.53,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.1,
+    "progressive_m": 0.19,
+    "mean_speed_ms": 4.08,
+    "nearest_opponent_min_m": 10.95,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00038",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13023,
+   "frame_end": 13088,
+   "time_start": "08:40.92",
+   "duration_s": 2.64,
+   "team": "H",
+   "player_slot": 2,
+   "start_location": {
+    "x_m": 22.53,
+    "y_m": 47.76,
+    "x_att_m": 22.53,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 28.46,
+    "y_m": 20.72,
+    "x_att_m": 28.46,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 11,
+    "recipient_team": "H",
+    "length_m": 27.68,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": -77.62,
+    "progressive_m": 5.94,
+    "flight_frames": 64,
+    "max_ball_speed_ms": 14.72,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": true,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 10.95,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00039",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13088,
+   "frame_end": 13106,
+   "time_start": "08:43.52",
+   "duration_s": 0.76,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 28.46,
+    "y_m": 20.72,
+    "x_att_m": 28.46,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 30.35,
+    "y_m": 18.59,
+    "x_att_m": 30.35,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.85,
+    "progressive_m": 1.89,
+    "mean_speed_ms": 3.76,
+    "nearest_opponent_min_m": 5.55,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00040",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13216,
+   "frame_end": 13233,
+   "time_start": "08:48.64",
+   "duration_s": 0.72,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 28.82,
+    "y_m": 17.3,
+    "x_att_m": 28.82,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 28.37,
+    "y_m": 17.68,
+    "x_att_m": 28.37,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 10.35,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00041",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13255,
+   "frame_end": 13280,
+   "time_start": "08:50.20",
+   "duration_s": 1.04,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 28.84,
+    "y_m": 18.66,
+    "x_att_m": 28.84,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 29.21,
+    "y_m": 19.56,
+    "x_att_m": 29.21,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 6.42,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00042",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13280,
+   "frame_end": 13332,
+   "time_start": "08:51.20",
+   "duration_s": 2.12,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 29.21,
+    "y_m": 19.56,
+    "x_att_m": 29.21,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 29.4,
+    "y_m": 45.4,
+    "x_att_m": 29.4,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 2,
+    "recipient_team": "H",
+    "length_m": 25.84,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 89.56,
+    "progressive_m": 0.2,
+    "flight_frames": 51,
+    "max_ball_speed_ms": 17.05,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": true,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 6.42,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00043",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13332,
+   "frame_end": 13367,
+   "time_start": "08:53.28",
+   "duration_s": 1.44,
+   "team": "H",
+   "player_slot": 2,
+   "start_location": {
+    "x_m": 29.4,
+    "y_m": 45.4,
+    "x_att_m": 29.4,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 33.06,
+    "y_m": 48.14,
+    "x_att_m": 33.06,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 4.57,
+    "progressive_m": 3.66,
+    "mean_speed_ms": 3.17,
+    "nearest_opponent_min_m": 7.41,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00044",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13367,
+   "frame_end": 13402,
+   "time_start": "08:54.68",
+   "duration_s": 1.44,
+   "team": "H",
+   "player_slot": 2,
+   "start_location": {
+    "x_m": 33.06,
+    "y_m": 48.14,
+    "x_att_m": 33.06,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 41.3,
+    "y_m": 63.63,
+    "x_att_m": 41.3,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 9,
+    "recipient_team": "H",
+    "length_m": 17.55,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 62.01,
+    "progressive_m": 8.24,
+    "flight_frames": 34,
+    "max_ball_speed_ms": 17.04,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 7.41,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00045",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13402,
+   "frame_end": 13440,
+   "time_start": "08:56.08",
+   "duration_s": 1.56,
+   "team": "H",
+   "player_slot": 9,
+   "start_location": {
+    "x_m": 41.3,
+    "y_m": 63.63,
+    "x_att_m": 41.3,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 40.59,
+    "y_m": 61.59,
+    "x_att_m": 40.59,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.16,
+    "progressive_m": -0.71,
+    "mean_speed_ms": 1.39,
+    "nearest_opponent_min_m": 1.77,
+    "under_pressure": true,
+    "is_dribble": true,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00046",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13440,
+   "frame_end": 13495,
+   "time_start": "08:57.60",
+   "duration_s": 2.24,
+   "team": "H",
+   "player_slot": 9,
+   "start_location": {
+    "x_m": 40.59,
+    "y_m": 61.59,
+    "x_att_m": 40.59,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 31.48,
+    "y_m": 48.03,
+    "x_att_m": 31.48,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 2,
+    "recipient_team": "H",
+    "length_m": 16.33,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": -123.87,
+    "progressive_m": -9.1,
+    "flight_frames": 54,
+    "max_ball_speed_ms": 8.45,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 1.77,
+    "under_pressure": true
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00047",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13495,
+   "frame_end": 13516,
+   "time_start": "08:59.80",
+   "duration_s": 0.88,
+   "team": "H",
+   "player_slot": 2,
+   "start_location": {
+    "x_m": 31.48,
+    "y_m": 48.03,
+    "x_att_m": 31.48,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 31.33,
+    "y_m": 44.72,
+    "x_att_m": 31.33,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.31,
+    "progressive_m": -0.16,
+    "mean_speed_ms": 3.76,
+    "nearest_opponent_min_m": 8.16,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00048",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13516,
+   "frame_end": 13563,
+   "time_start": "09:00.64",
+   "duration_s": 1.92,
+   "team": "H",
+   "player_slot": 2,
+   "start_location": {
+    "x_m": 31.33,
+    "y_m": 44.72,
+    "x_att_m": 31.33,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 37.05,
+    "y_m": 14.46,
+    "x_att_m": 37.05,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 11,
+    "recipient_team": "H",
+    "length_m": 30.8,
+    "length_class": "long",
+    "direction": "lateral",
+    "angle_deg": -79.29,
+    "progressive_m": 5.73,
+    "flight_frames": 46,
+    "max_ball_speed_ms": 22.94,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": true,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 8.16,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00049",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13563,
+   "frame_end": 13581,
+   "time_start": "09:02.52",
+   "duration_s": 0.76,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 37.05,
+    "y_m": 14.46,
+    "x_att_m": 37.05,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 39.17,
+    "y_m": 11.42,
+    "x_att_m": 39.17,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.7,
+    "progressive_m": 2.12,
+    "mean_speed_ms": 4.87,
+    "nearest_opponent_min_m": 10.43,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00050",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13687,
+   "frame_end": 13699,
+   "time_start": "09:07.48",
+   "duration_s": 0.52,
+   "team": "A",
+   "player_slot": 35,
+   "start_location": {
+    "x_m": 70.04,
+    "y_m": 6.82,
+    "x_att_m": 35.26,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 71.78,
+    "y_m": 7.09,
+    "x_att_m": 33.52,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 4.13,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00051",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13848,
+   "frame_end": 13876,
+   "time_start": "09:13.92",
+   "duration_s": 1.16,
+   "team": "H",
+   "player_slot": 6,
+   "start_location": {
+    "x_m": 63.01,
+    "y_m": 23.71,
+    "x_att_m": 63.01,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 62.33,
+    "y_m": 28.53,
+    "x_att_m": 62.33,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 4.86,
+    "progressive_m": -0.67,
+    "mean_speed_ms": 4.19,
+    "nearest_opponent_min_m": 1.88,
+    "under_pressure": true,
+    "is_dribble": true,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00052",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13876,
+   "frame_end": 13902,
+   "time_start": "09:15.04",
+   "duration_s": 1.08,
+   "team": "H",
+   "player_slot": 6,
+   "start_location": {
+    "x_m": 62.33,
+    "y_m": 28.53,
+    "x_att_m": 62.33,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 62.89,
+    "y_m": 38.03,
+    "x_att_m": 62.89,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 4,
+    "recipient_team": "H",
+    "length_m": 9.52,
+    "length_class": "short",
+    "direction": "lateral",
+    "angle_deg": 86.67,
+    "progressive_m": 0.55,
+    "flight_frames": 25,
+    "max_ball_speed_ms": 10.59,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 1.88,
+    "under_pressure": true
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00053",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13902,
+   "frame_end": 13931,
+   "time_start": "09:16.08",
+   "duration_s": 1.2,
+   "team": "H",
+   "player_slot": 4,
+   "start_location": {
+    "x_m": 62.89,
+    "y_m": 38.03,
+    "x_att_m": 62.89,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 64.44,
+    "y_m": 42.12,
+    "x_att_m": 64.44,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 4.37,
+    "progressive_m": 1.55,
+    "mean_speed_ms": 3.64,
+    "nearest_opponent_min_m": 3.17,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00054",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13931,
+   "frame_end": 13966,
+   "time_start": "09:17.24",
+   "duration_s": 1.44,
+   "team": "H",
+   "player_slot": 4,
+   "start_location": {
+    "x_m": 64.44,
+    "y_m": 42.12,
+    "x_att_m": 64.44,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 71.88,
+    "y_m": 58.42,
+    "x_att_m": 71.88,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 9,
+    "recipient_team": "H",
+    "length_m": 17.92,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 65.46,
+    "progressive_m": 7.44,
+    "flight_frames": 34,
+    "max_ball_speed_ms": 15.97,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": true,
+    "into_box": false,
+    "nearest_opponent_m": 3.17,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00055",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13966,
+   "frame_end": 13992,
+   "time_start": "09:18.64",
+   "duration_s": 1.08,
+   "team": "H",
+   "player_slot": 9,
+   "start_location": {
+    "x_m": 71.88,
+    "y_m": 58.42,
+    "x_att_m": 71.88,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 75.95,
+    "y_m": 62.56,
+    "x_att_m": 75.95,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 5.81,
+    "progressive_m": 4.07,
+    "mean_speed_ms": 5.38,
+    "nearest_opponent_min_m": 4.01,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00056",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 13992,
+   "frame_end": 14009,
+   "time_start": "09:19.68",
+   "duration_s": 0.72,
+   "team": "H",
+   "player_slot": 9,
+   "start_location": {
+    "x_m": 75.95,
+    "y_m": 62.56,
+    "x_att_m": 75.95,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 79.73,
+    "y_m": 65.85,
+    "x_att_m": 79.73,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 16,
+    "recipient_team": "H",
+    "length_m": 5.02,
+    "length_class": "short",
+    "direction": "forward",
+    "angle_deg": 41.02,
+    "progressive_m": 3.78,
+    "flight_frames": 16,
+    "max_ball_speed_ms": 8.0,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 4.01,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00057",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14009,
+   "frame_end": 14032,
+   "time_start": "09:20.36",
+   "duration_s": 0.96,
+   "team": "H",
+   "player_slot": 16,
+   "start_location": {
+    "x_m": 79.73,
+    "y_m": 65.85,
+    "x_att_m": 79.73,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 82.06,
+    "y_m": 66.73,
+    "x_att_m": 82.06,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.49,
+    "progressive_m": 2.33,
+    "mean_speed_ms": 2.59,
+    "nearest_opponent_min_m": 1.49,
+    "under_pressure": true,
+    "is_dribble": true,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00058",
+   "type": "duel",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14033,
+   "frame_end": 14067,
+   "time_start": "09:21.32",
+   "duration_s": 1.4,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": 82.13,
+    "y_m": 66.73,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": 84.89,
+    "y_m": 67.14,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "home_slot": 16,
+    "away_slot": 32,
+    "winner_team": "H",
+    "min_player_distance_m": 0.98
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00059",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14068,
+   "frame_end": 14107,
+   "time_start": "09:22.72",
+   "duration_s": 1.6,
+   "team": "H",
+   "player_slot": 16,
+   "start_location": {
+    "x_m": 84.97,
+    "y_m": 67.15,
+    "x_att_m": 84.97,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 86.62,
+    "y_m": 67.12,
+    "x_att_m": 86.62,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 1.4,
+    "under_pressure": true,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00060",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14107,
+   "frame_end": 14146,
+   "time_start": "09:24.28",
+   "duration_s": 1.6,
+   "team": "H",
+   "player_slot": 16,
+   "start_location": {
+    "x_m": 86.62,
+    "y_m": 67.12,
+    "x_att_m": 86.62,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 73.56,
+    "y_m": 60.12,
+    "x_att_m": 73.56,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 4,
+    "recipient_team": "H",
+    "length_m": 14.83,
+    "length_class": "medium",
+    "direction": "backward",
+    "angle_deg": -151.81,
+    "progressive_m": -13.07,
+    "flight_frames": 38,
+    "max_ball_speed_ms": 12.59,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 1.4,
+    "under_pressure": true
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00061",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14146,
+   "frame_end": 14174,
+   "time_start": "09:25.84",
+   "duration_s": 1.16,
+   "team": "H",
+   "player_slot": 4,
+   "start_location": {
+    "x_m": 73.56,
+    "y_m": 60.12,
+    "x_att_m": 73.56,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 72.29,
+    "y_m": 57.23,
+    "x_att_m": 72.29,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.15,
+    "progressive_m": -1.27,
+    "mean_speed_ms": 2.72,
+    "nearest_opponent_min_m": 3.84,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00062",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14360,
+   "frame_end": 14393,
+   "time_start": "09:34.40",
+   "duration_s": 1.36,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 56.93,
+    "y_m": 16.33,
+    "x_att_m": 56.93,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 56.8,
+    "y_m": 15.7,
+    "x_att_m": 56.8,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 7.44,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00063",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14393,
+   "frame_end": 14424,
+   "time_start": "09:35.72",
+   "duration_s": 1.28,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 56.8,
+    "y_m": 15.7,
+    "x_att_m": 56.8,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 59.44,
+    "y_m": 7.83,
+    "x_att_m": 59.44,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 18,
+    "recipient_team": "H",
+    "length_m": 8.3,
+    "length_class": "short",
+    "direction": "lateral",
+    "angle_deg": -71.47,
+    "progressive_m": 2.64,
+    "flight_frames": 30,
+    "max_ball_speed_ms": 8.98,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 7.44,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00064",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14424,
+   "frame_end": 14466,
+   "time_start": "09:36.96",
+   "duration_s": 1.72,
+   "team": "H",
+   "player_slot": 18,
+   "start_location": {
+    "x_m": 59.44,
+    "y_m": 7.83,
+    "x_att_m": 59.44,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 62.29,
+    "y_m": 8.76,
+    "x_att_m": 62.29,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.0,
+    "progressive_m": 2.85,
+    "mean_speed_ms": 1.74,
+    "nearest_opponent_min_m": 4.54,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00065",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14466,
+   "frame_end": 14512,
+   "time_start": "09:38.64",
+   "duration_s": 1.88,
+   "team": "H",
+   "player_slot": 18,
+   "start_location": {
+    "x_m": 62.29,
+    "y_m": 8.76,
+    "x_att_m": 62.29,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 68.17,
+    "y_m": 0.77,
+    "x_att_m": 68.17,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 3,
+    "recipient_team": "H",
+    "length_m": 9.93,
+    "length_class": "short",
+    "direction": "lateral",
+    "angle_deg": -53.64,
+    "progressive_m": 5.89,
+    "flight_frames": 45,
+    "max_ball_speed_ms": 10.61,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 4.54,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00066",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14519,
+   "frame_end": 14554,
+   "time_start": "09:40.76",
+   "duration_s": 1.44,
+   "team": "H",
+   "player_slot": 3,
+   "start_location": {
+    "x_m": 67.72,
+    "y_m": 0.39,
+    "x_att_m": 67.72,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 55.58,
+    "y_m": 6.16,
+    "x_att_m": 55.58,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 18,
+    "recipient_team": "H",
+    "length_m": 13.44,
+    "length_class": "medium",
+    "direction": "backward",
+    "angle_deg": 154.59,
+    "progressive_m": -12.14,
+    "flight_frames": 34,
+    "max_ball_speed_ms": 12.37,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 3.93,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00067",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14554,
+   "frame_end": 14594,
+   "time_start": "09:42.16",
+   "duration_s": 1.64,
+   "team": "H",
+   "player_slot": 18,
+   "start_location": {
+    "x_m": 55.58,
+    "y_m": 6.16,
+    "x_att_m": 55.58,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 52.43,
+    "y_m": 10.02,
+    "x_att_m": 52.43,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 4.98,
+    "progressive_m": -3.15,
+    "mean_speed_ms": 3.04,
+    "nearest_opponent_min_m": 3.9,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00068",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14594,
+   "frame_end": 14629,
+   "time_start": "09:43.76",
+   "duration_s": 1.44,
+   "team": "H",
+   "player_slot": 18,
+   "start_location": {
+    "x_m": 52.43,
+    "y_m": 10.02,
+    "x_att_m": 52.43,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 44.95,
+    "y_m": 19.79,
+    "x_att_m": 44.95,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 11,
+    "recipient_team": "H",
+    "length_m": 12.3,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 127.4,
+    "progressive_m": -7.47,
+    "flight_frames": 34,
+    "max_ball_speed_ms": 11.08,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 3.9,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00069",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14637,
+   "frame_end": 14672,
+   "time_start": "09:45.48",
+   "duration_s": 1.44,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 45.29,
+    "y_m": 20.74,
+    "x_att_m": 45.29,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 54.77,
+    "y_m": 24.4,
+    "x_att_m": 54.77,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 12,
+    "recipient_team": "H",
+    "length_m": 10.16,
+    "length_class": "short",
+    "direction": "forward",
+    "angle_deg": 21.1,
+    "progressive_m": 9.48,
+    "flight_frames": 34,
+    "max_ball_speed_ms": 9.67,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 9.46,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00070",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14672,
+   "frame_end": 14684,
+   "time_start": "09:46.88",
+   "duration_s": 0.52,
+   "team": "H",
+   "player_slot": 12,
+   "start_location": {
+    "x_m": 54.77,
+    "y_m": 24.4,
+    "x_att_m": 54.77,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 54.78,
+    "y_m": 26.0,
+    "x_att_m": 54.78,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 2.7,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00071",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14684,
+   "frame_end": 14729,
+   "time_start": "09:47.36",
+   "duration_s": 1.84,
+   "team": "H",
+   "player_slot": 12,
+   "start_location": {
+    "x_m": 54.78,
+    "y_m": 26.0,
+    "x_att_m": 54.78,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 47.42,
+    "y_m": 46.95,
+    "x_att_m": 47.42,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 2,
+    "recipient_team": "H",
+    "length_m": 22.2,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 109.34,
+    "progressive_m": -7.36,
+    "flight_frames": 44,
+    "max_ball_speed_ms": 16.92,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 2.7,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00072",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14729,
+   "frame_end": 14753,
+   "time_start": "09:49.16",
+   "duration_s": 1.0,
+   "team": "H",
+   "player_slot": 2,
+   "start_location": {
+    "x_m": 47.42,
+    "y_m": 46.95,
+    "x_att_m": 47.42,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 49.05,
+    "y_m": 49.28,
+    "x_att_m": 49.05,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.84,
+    "progressive_m": 1.63,
+    "mean_speed_ms": 2.84,
+    "nearest_opponent_min_m": 12.55,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00073",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14753,
+   "frame_end": 14787,
+   "time_start": "09:50.12",
+   "duration_s": 1.4,
+   "team": "H",
+   "player_slot": 2,
+   "start_location": {
+    "x_m": 49.05,
+    "y_m": 49.28,
+    "x_att_m": 49.05,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 60.89,
+    "y_m": 64.06,
+    "x_att_m": 60.89,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 16,
+    "recipient_team": "H",
+    "length_m": 18.94,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 51.3,
+    "progressive_m": 11.84,
+    "flight_frames": 33,
+    "max_ball_speed_ms": 18.67,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 12.55,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00074",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14787,
+   "frame_end": 14811,
+   "time_start": "09:51.48",
+   "duration_s": 1.0,
+   "team": "H",
+   "player_slot": 16,
+   "start_location": {
+    "x_m": 60.89,
+    "y_m": 64.06,
+    "x_att_m": 60.89,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 62.91,
+    "y_m": 65.15,
+    "x_att_m": 62.91,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.29,
+    "progressive_m": 2.02,
+    "mean_speed_ms": 2.29,
+    "nearest_opponent_min_m": 3.42,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00075",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14811,
+   "frame_end": 14833,
+   "time_start": "09:52.44",
+   "duration_s": 0.92,
+   "team": "H",
+   "player_slot": 16,
+   "start_location": {
+    "x_m": 62.91,
+    "y_m": 65.15,
+    "x_att_m": 62.91,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 69.4,
+    "y_m": 67.1,
+    "x_att_m": 69.4,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 9,
+    "recipient_team": "H",
+    "length_m": 6.78,
+    "length_class": "short",
+    "direction": "forward",
+    "angle_deg": 16.71,
+    "progressive_m": 6.49,
+    "flight_frames": 21,
+    "max_ball_speed_ms": 9.43,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 3.42,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00076",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14838,
+   "frame_end": 14884,
+   "time_start": "09:53.52",
+   "duration_s": 1.88,
+   "team": "H",
+   "player_slot": 9,
+   "start_location": {
+    "x_m": 69.67,
+    "y_m": 66.8,
+    "x_att_m": 69.67,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 58.74,
+    "y_m": 60.35,
+    "x_att_m": 58.74,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "intercepted",
+    "recipient_slot": 34,
+    "recipient_team": "A",
+    "length_m": 12.7,
+    "length_class": "medium",
+    "direction": "backward",
+    "angle_deg": null,
+    "progressive_m": -10.94,
+    "flight_frames": 45,
+    "max_ball_speed_ms": 10.61,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 0.97,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00077",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14884,
+   "frame_end": 14949,
+   "time_start": "09:55.36",
+   "duration_s": 2.64,
+   "team": "A",
+   "player_slot": 34,
+   "start_location": {
+    "x_m": 58.74,
+    "y_m": 60.35,
+    "x_att_m": 46.56,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 50.34,
+    "y_m": 65.32,
+    "x_att_m": 54.96,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 9.76,
+    "progressive_m": 8.4,
+    "mean_speed_ms": 3.7,
+    "nearest_opponent_min_m": 2.71,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00078",
+   "type": "interception",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14884,
+   "frame_end": 14885,
+   "time_start": "09:55.36",
+   "duration_s": 0.08,
+   "team": "A",
+   "player_slot": 34,
+   "start_location": {
+    "x_m": 58.74,
+    "y_m": 60.35,
+    "x_att_m": 46.56,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 58.74,
+    "y_m": 60.35,
+    "x_att_m": 46.56,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "intercepted_pass_id": "E00076",
+    "passer_slot": 9,
+    "passer_team": "H",
+    "flight_frames": 45,
+    "distance_from_passer_m": 12.7
+   },
+   "related_event_ids": [
+    "E00076"
+   ]
+  },
+  {
+   "id": "E00079",
+   "type": "possession_change",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14884,
+   "frame_end": 14885,
+   "time_start": "09:55.36",
+   "duration_s": 0.08,
+   "team": "A",
+   "player_slot": 34,
+   "start_location": {
+    "x_m": 58.74,
+    "y_m": 60.35,
+    "x_att_m": 46.56,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 58.74,
+    "y_m": 60.35,
+    "x_att_m": 46.56,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "from_team": "H",
+    "to_team": "A",
+    "kind": "loose_ball_recovery",
+    "trigger_event_id": "E00078",
+    "flight_frames": 45,
+    "new_team_hold_s": 2.64
+   },
+   "related_event_ids": [
+    "E00078"
+   ]
+  },
+  {
+   "id": "E00080",
+   "type": "duel",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14950,
+   "frame_end": 14968,
+   "time_start": "09:58.00",
+   "duration_s": 0.76,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": 50.25,
+    "y_m": 65.32,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": 49.69,
+    "y_m": 65.41,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "home_slot": 4,
+    "away_slot": 34,
+    "winner_team": "A",
+    "min_player_distance_m": 0.86
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00081",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 14980,
+   "frame_end": 15030,
+   "time_start": "09:59.20",
+   "duration_s": 2.04,
+   "team": "A",
+   "player_slot": 34,
+   "start_location": {
+    "x_m": 50.34,
+    "y_m": 64.23,
+    "x_att_m": 54.96,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 56.21,
+    "y_m": 49.12,
+    "x_att_m": 49.09,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 31,
+    "recipient_team": "A",
+    "length_m": 16.21,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": -111.25,
+    "progressive_m": -5.87,
+    "flight_frames": 49,
+    "max_ball_speed_ms": 10.5,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 1.97,
+    "under_pressure": true
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00082",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15030,
+   "frame_end": 15058,
+   "time_start": "10:01.20",
+   "duration_s": 1.16,
+   "team": "A",
+   "player_slot": 31,
+   "start_location": {
+    "x_m": 56.21,
+    "y_m": 49.12,
+    "x_att_m": 49.09,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 59.44,
+    "y_m": 51.77,
+    "x_att_m": 45.86,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 4.18,
+    "progressive_m": -3.23,
+    "mean_speed_ms": 3.6,
+    "nearest_opponent_min_m": 3.0,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00083",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15058,
+   "frame_end": 15129,
+   "time_start": "10:02.32",
+   "duration_s": 2.88,
+   "team": "A",
+   "player_slot": 31,
+   "start_location": {
+    "x_m": 59.44,
+    "y_m": 51.77,
+    "x_att_m": 45.86,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 66.37,
+    "y_m": 67.51,
+    "x_att_m": 38.93,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 32,
+    "recipient_team": "A",
+    "length_m": 17.2,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 113.77,
+    "progressive_m": -6.93,
+    "flight_frames": 70,
+    "max_ball_speed_ms": 12.18,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 3.0,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00084",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15129,
+   "frame_end": 15162,
+   "time_start": "10:05.16",
+   "duration_s": 1.36,
+   "team": "A",
+   "player_slot": 32,
+   "start_location": {
+    "x_m": 66.37,
+    "y_m": 67.51,
+    "x_att_m": 38.93,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 61.47,
+    "y_m": 67.67,
+    "x_att_m": 43.83,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 4.9,
+    "progressive_m": 4.9,
+    "mean_speed_ms": 3.6,
+    "nearest_opponent_min_m": 2.04,
+    "under_pressure": true,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00085",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15162,
+   "frame_end": 15200,
+   "time_start": "10:06.48",
+   "duration_s": 1.56,
+   "team": "A",
+   "player_slot": 32,
+   "start_location": {
+    "x_m": 61.47,
+    "y_m": 67.67,
+    "x_att_m": 43.83,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 51.33,
+    "y_m": 67.69,
+    "x_att_m": 53.97,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 34,
+    "recipient_team": "A",
+    "length_m": 10.14,
+    "length_class": "short",
+    "direction": "forward",
+    "angle_deg": 0.09,
+    "progressive_m": 10.14,
+    "flight_frames": 37,
+    "max_ball_speed_ms": 7.79,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 2.22,
+    "under_pressure": true
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00086",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15200,
+   "frame_end": 15257,
+   "time_start": "10:08.00",
+   "duration_s": 2.32,
+   "team": "A",
+   "player_slot": 34,
+   "start_location": {
+    "x_m": 51.33,
+    "y_m": 67.69,
+    "x_att_m": 53.97,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 50.63,
+    "y_m": 66.59,
+    "x_att_m": 54.67,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 1.56,
+    "under_pressure": true,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00087",
+   "type": "duel",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15258,
+   "frame_end": 15301,
+   "time_start": "10:10.32",
+   "duration_s": 1.76,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": 50.61,
+    "y_m": 66.57,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": 45.04,
+    "y_m": 65.74,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "home_slot": 9,
+    "away_slot": 34,
+    "winner_team": "A",
+    "min_player_distance_m": 0.53
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00088",
+   "type": "duel",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15312,
+   "frame_end": 15318,
+   "time_start": "10:12.48",
+   "duration_s": 0.28,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": 43.3,
+    "y_m": 64.88,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": 42.31,
+    "y_m": 64.4,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "home_slot": 4,
+    "away_slot": 34,
+    "winner_team": "A",
+    "min_player_distance_m": 0.8
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00089",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15319,
+   "frame_end": 15330,
+   "time_start": "10:12.76",
+   "duration_s": 0.48,
+   "team": "A",
+   "player_slot": 34,
+   "start_location": {
+    "x_m": 42.14,
+    "y_m": 64.31,
+    "x_att_m": 63.16,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 40.47,
+    "y_m": 63.2,
+    "x_att_m": 64.83,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.01,
+    "progressive_m": 1.67,
+    "mean_speed_ms": 4.19,
+    "nearest_opponent_min_m": 0.83,
+    "under_pressure": true,
+    "is_dribble": true,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00090",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15330,
+   "frame_end": 15341,
+   "time_start": "10:13.20",
+   "duration_s": 0.48,
+   "team": "A",
+   "player_slot": 34,
+   "start_location": {
+    "x_m": 40.47,
+    "y_m": 63.2,
+    "x_att_m": 64.83,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 39.21,
+    "y_m": 61.55,
+    "x_att_m": 66.09,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 32,
+    "recipient_team": "A",
+    "length_m": 2.08,
+    "length_class": "short",
+    "direction": "lateral",
+    "angle_deg": -52.72,
+    "progressive_m": 1.26,
+    "flight_frames": 10,
+    "max_ball_speed_ms": 4.81,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 2.17,
+    "under_pressure": true
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00091",
+   "type": "duel",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15331,
+   "frame_end": 15340,
+   "time_start": "10:13.24",
+   "duration_s": 0.4,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": 40.33,
+    "y_m": 63.07,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": 39.3,
+    "y_m": 61.71,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "home_slot": 16,
+    "away_slot": 34,
+    "winner_team": "A",
+    "min_player_distance_m": 1.24
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00092",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15349,
+   "frame_end": 15401,
+   "time_start": "10:13.96",
+   "duration_s": 2.12,
+   "team": "A",
+   "player_slot": 32,
+   "start_location": {
+    "x_m": 38.74,
+    "y_m": 60.41,
+    "x_att_m": 66.56,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 54.44,
+    "y_m": 63.88,
+    "x_att_m": 50.86,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 30,
+    "recipient_team": "A",
+    "length_m": 16.08,
+    "length_class": "medium",
+    "direction": "backward",
+    "angle_deg": 167.52,
+    "progressive_m": -15.7,
+    "flight_frames": 51,
+    "max_ball_speed_ms": 11.93,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 1.16,
+    "under_pressure": true
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00093",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15401,
+   "frame_end": 15419,
+   "time_start": "10:16.04",
+   "duration_s": 0.76,
+   "team": "A",
+   "player_slot": 30,
+   "start_location": {
+    "x_m": 54.44,
+    "y_m": 63.88,
+    "x_att_m": 50.86,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 57.91,
+    "y_m": 64.88,
+    "x_att_m": 47.39,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.62,
+    "progressive_m": -3.48,
+    "mean_speed_ms": 4.76,
+    "nearest_opponent_min_m": 1.81,
+    "under_pressure": true,
+    "is_dribble": true,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00094",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15419,
+   "frame_end": 15461,
+   "time_start": "10:16.76",
+   "duration_s": 1.72,
+   "team": "A",
+   "player_slot": 30,
+   "start_location": {
+    "x_m": 57.91,
+    "y_m": 64.88,
+    "x_att_m": 47.39,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 69.96,
+    "y_m": 54.5,
+    "x_att_m": 35.34,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 41,
+    "recipient_team": "A",
+    "length_m": 15.9,
+    "length_class": "medium",
+    "direction": "backward",
+    "angle_deg": -139.24,
+    "progressive_m": -12.04,
+    "flight_frames": 41,
+    "max_ball_speed_ms": 13.06,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 1.81,
+    "under_pressure": true
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00095",
+   "type": "duel",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15420,
+   "frame_end": 15426,
+   "time_start": "10:16.80",
+   "duration_s": 0.28,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": 58.12,
+    "y_m": 64.89,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": 59.52,
+    "y_m": 64.59,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "home_slot": 9,
+    "away_slot": 30,
+    "winner_team": "A",
+    "min_player_distance_m": 1.38
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00096",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15461,
+   "frame_end": 15490,
+   "time_start": "10:18.44",
+   "duration_s": 1.2,
+   "team": "A",
+   "player_slot": 41,
+   "start_location": {
+    "x_m": 69.96,
+    "y_m": 54.5,
+    "x_att_m": 35.34,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 71.78,
+    "y_m": 53.78,
+    "x_att_m": 33.52,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 10.53,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00097",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15503,
+   "frame_end": 15556,
+   "time_start": "10:20.12",
+   "duration_s": 2.16,
+   "team": "A",
+   "player_slot": 41,
+   "start_location": {
+    "x_m": 72.09,
+    "y_m": 53.22,
+    "x_att_m": 33.21,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 73.81,
+    "y_m": 50.64,
+    "x_att_m": 31.49,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.1,
+    "progressive_m": -1.72,
+    "mean_speed_ms": 1.44,
+    "nearest_opponent_min_m": 2.52,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00098",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15556,
+   "frame_end": 15601,
+   "time_start": "10:22.24",
+   "duration_s": 1.84,
+   "team": "A",
+   "player_slot": 41,
+   "start_location": {
+    "x_m": 73.81,
+    "y_m": 50.64,
+    "x_att_m": 31.49,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 81.91,
+    "y_m": 35.33,
+    "x_att_m": 23.39,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 35,
+    "recipient_team": "A",
+    "length_m": 17.32,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": -117.88,
+    "progressive_m": -8.1,
+    "flight_frames": 44,
+    "max_ball_speed_ms": 13.4,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 2.52,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00099",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15601,
+   "frame_end": 15615,
+   "time_start": "10:24.04",
+   "duration_s": 0.6,
+   "team": "A",
+   "player_slot": 35,
+   "start_location": {
+    "x_m": 81.91,
+    "y_m": 35.33,
+    "x_att_m": 23.39,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 83.78,
+    "y_m": 36.02,
+    "x_att_m": 21.52,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 3.02,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00100",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15615,
+   "frame_end": 15654,
+   "time_start": "10:24.60",
+   "duration_s": 1.6,
+   "team": "A",
+   "player_slot": 35,
+   "start_location": {
+    "x_m": 83.78,
+    "y_m": 36.02,
+    "x_att_m": 21.52,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 99.89,
+    "y_m": 37.2,
+    "x_att_m": 5.41,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "intercepted",
+    "recipient_slot": 24,
+    "recipient_team": "H",
+    "length_m": 16.15,
+    "length_class": "medium",
+    "direction": "backward",
+    "angle_deg": null,
+    "progressive_m": -16.11,
+    "flight_frames": 38,
+    "max_ball_speed_ms": 13.76,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 3.02,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00101",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15654,
+   "frame_end": 15679,
+   "time_start": "10:26.16",
+   "duration_s": 1.04,
+   "team": "H",
+   "player_slot": 24,
+   "start_location": {
+    "x_m": 99.89,
+    "y_m": 37.2,
+    "x_att_m": 99.89,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 100.99,
+    "y_m": 39.18,
+    "x_att_m": 100.99,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.27,
+    "progressive_m": 1.1,
+    "mean_speed_ms": 2.18,
+    "nearest_opponent_min_m": 4.83,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00102",
+   "type": "interception",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15654,
+   "frame_end": 15655,
+   "time_start": "10:26.16",
+   "duration_s": 0.08,
+   "team": "H",
+   "player_slot": 24,
+   "start_location": {
+    "x_m": 99.89,
+    "y_m": 37.2,
+    "x_att_m": 99.89,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 99.89,
+    "y_m": 37.2,
+    "x_att_m": 99.89,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "intercepted_pass_id": "E00100",
+    "passer_slot": 35,
+    "passer_team": "A",
+    "flight_frames": 38,
+    "distance_from_passer_m": 16.15
+   },
+   "related_event_ids": [
+    "E00100"
+   ]
+  },
+  {
+   "id": "E00103",
+   "type": "possession_change",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15654,
+   "frame_end": 15655,
+   "time_start": "10:26.16",
+   "duration_s": 0.08,
+   "team": "H",
+   "player_slot": 24,
+   "start_location": {
+    "x_m": 99.89,
+    "y_m": 37.2,
+    "x_att_m": 99.89,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 99.89,
+    "y_m": 37.2,
+    "x_att_m": 99.89,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "from_team": "A",
+    "to_team": "H",
+    "kind": "loose_ball_recovery",
+    "trigger_event_id": "E00102",
+    "flight_frames": 38,
+    "new_team_hold_s": 1.04
+   },
+   "related_event_ids": [
+    "E00102"
+   ]
+  },
+  {
+   "id": "E00104",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15775,
+   "frame_end": 15797,
+   "time_start": "10:31.00",
+   "duration_s": 0.92,
+   "team": "A",
+   "player_slot": 34,
+   "start_location": {
+    "x_m": 55.81,
+    "y_m": 62.68,
+    "x_att_m": 49.49,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 55.08,
+    "y_m": 65.64,
+    "x_att_m": 50.22,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.05,
+    "progressive_m": 0.73,
+    "mean_speed_ms": 3.31,
+    "nearest_opponent_min_m": 2.27,
+    "under_pressure": true,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00105",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 15797,
+   "frame_end": 15818,
+   "time_start": "10:31.88",
+   "duration_s": 0.88,
+   "team": "A",
+   "player_slot": 34,
+   "start_location": {
+    "x_m": 55.08,
+    "y_m": 65.64,
+    "x_att_m": 50.22,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 50.81,
+    "y_m": 66.02,
+    "x_att_m": 54.49,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 29,
+    "recipient_team": "A",
+    "length_m": 4.29,
+    "length_class": "short",
+    "direction": "forward",
+    "angle_deg": 5.1,
+    "progressive_m": 4.27,
+    "flight_frames": 20,
+    "max_ball_speed_ms": 6.62,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 2.27,
+    "under_pressure": true
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00106",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16041,
+   "frame_end": 16068,
+   "time_start": "10:41.64",
+   "duration_s": 1.12,
+   "team": "H",
+   "player_slot": 24,
+   "start_location": {
+    "x_m": 9.22,
+    "y_m": 59.28,
+    "x_att_m": 9.22,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 9.87,
+    "y_m": 59.87,
+    "x_att_m": 9.87,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 35.23,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00107",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16199,
+   "frame_end": 16249,
+   "time_start": "10:47.96",
+   "duration_s": 2.04,
+   "team": "H",
+   "player_slot": 16,
+   "start_location": {
+    "x_m": 32.3,
+    "y_m": 59.19,
+    "x_att_m": 32.3,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 35.34,
+    "y_m": 60.48,
+    "x_att_m": 35.34,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.3,
+    "progressive_m": 3.04,
+    "mean_speed_ms": 1.62,
+    "nearest_opponent_min_m": 9.15,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00108",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16249,
+   "frame_end": 16288,
+   "time_start": "10:49.96",
+   "duration_s": 1.6,
+   "team": "H",
+   "player_slot": 16,
+   "start_location": {
+    "x_m": 35.34,
+    "y_m": 60.48,
+    "x_att_m": 35.34,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 41.7,
+    "y_m": 63.67,
+    "x_att_m": 41.7,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "intercepted",
+    "recipient_slot": 29,
+    "recipient_team": "A",
+    "length_m": 7.11,
+    "length_class": "short",
+    "direction": "forward",
+    "angle_deg": null,
+    "progressive_m": 6.36,
+    "flight_frames": 38,
+    "max_ball_speed_ms": 6.09,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 9.15,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00109",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16288,
+   "frame_end": 16313,
+   "time_start": "10:51.52",
+   "duration_s": 1.04,
+   "team": "A",
+   "player_slot": 29,
+   "start_location": {
+    "x_m": 41.7,
+    "y_m": 63.67,
+    "x_att_m": 63.6,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 43.74,
+    "y_m": 64.69,
+    "x_att_m": 61.56,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.29,
+    "progressive_m": -2.05,
+    "mean_speed_ms": 2.2,
+    "nearest_opponent_min_m": 2.53,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00110",
+   "type": "interception",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16288,
+   "frame_end": 16289,
+   "time_start": "10:51.52",
+   "duration_s": 0.08,
+   "team": "A",
+   "player_slot": 29,
+   "start_location": {
+    "x_m": 41.7,
+    "y_m": 63.67,
+    "x_att_m": 63.6,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 41.7,
+    "y_m": 63.67,
+    "x_att_m": 63.6,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "intercepted_pass_id": "E00108",
+    "passer_slot": 16,
+    "passer_team": "H",
+    "flight_frames": 38,
+    "distance_from_passer_m": 7.11
+   },
+   "related_event_ids": [
+    "E00108"
+   ]
+  },
+  {
+   "id": "E00111",
+   "type": "possession_change",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16288,
+   "frame_end": 16289,
+   "time_start": "10:51.52",
+   "duration_s": 0.08,
+   "team": "A",
+   "player_slot": 29,
+   "start_location": {
+    "x_m": 41.7,
+    "y_m": 63.67,
+    "x_att_m": 63.6,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 41.7,
+    "y_m": 63.67,
+    "x_att_m": 63.6,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "from_team": "H",
+    "to_team": "A",
+    "kind": "loose_ball_recovery",
+    "trigger_event_id": "E00110",
+    "flight_frames": 38,
+    "new_team_hold_s": 1.04
+   },
+   "related_event_ids": [
+    "E00110"
+   ]
+  },
+  {
+   "id": "E00112",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16313,
+   "frame_end": 16336,
+   "time_start": "10:52.52",
+   "duration_s": 0.96,
+   "team": "A",
+   "player_slot": 29,
+   "start_location": {
+    "x_m": 43.74,
+    "y_m": 64.69,
+    "x_att_m": 61.56,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 48.38,
+    "y_m": 65.93,
+    "x_att_m": 56.92,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 32,
+    "recipient_team": "A",
+    "length_m": 4.8,
+    "length_class": "short",
+    "direction": "backward",
+    "angle_deg": 165.08,
+    "progressive_m": -4.64,
+    "flight_frames": 22,
+    "max_ball_speed_ms": 5.76,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 4.38,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00113",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16336,
+   "frame_end": 16384,
+   "time_start": "10:53.44",
+   "duration_s": 1.96,
+   "team": "A",
+   "player_slot": 32,
+   "start_location": {
+    "x_m": 48.38,
+    "y_m": 65.93,
+    "x_att_m": 56.92,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 48.9,
+    "y_m": 66.44,
+    "x_att_m": 56.4,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 7.98,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00114",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16384,
+   "frame_end": 16444,
+   "time_start": "10:55.36",
+   "duration_s": 2.44,
+   "team": "A",
+   "player_slot": 32,
+   "start_location": {
+    "x_m": 48.9,
+    "y_m": 66.44,
+    "x_att_m": 56.4,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 62.06,
+    "y_m": 59.09,
+    "x_att_m": 43.24,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 41,
+    "recipient_team": "A",
+    "length_m": 15.07,
+    "length_class": "medium",
+    "direction": "backward",
+    "angle_deg": -150.83,
+    "progressive_m": -13.16,
+    "flight_frames": 59,
+    "max_ball_speed_ms": 11.25,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 7.98,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00115",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16444,
+   "frame_end": 16582,
+   "time_start": "10:57.76",
+   "duration_s": 5.56,
+   "team": "A",
+   "player_slot": 41,
+   "start_location": {
+    "x_m": 62.06,
+    "y_m": 59.09,
+    "x_att_m": 43.24,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 61.79,
+    "y_m": 50.71,
+    "x_att_m": 43.51,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 8.38,
+    "progressive_m": 0.27,
+    "mean_speed_ms": 1.51,
+    "nearest_opponent_min_m": 3.4,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00116",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16813,
+   "frame_end": 16869,
+   "time_start": "11:12.52",
+   "duration_s": 2.28,
+   "team": "A",
+   "player_slot": 35,
+   "start_location": {
+    "x_m": 57.56,
+    "y_m": 16.53,
+    "x_att_m": 47.74,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 58.91,
+    "y_m": 22.59,
+    "x_att_m": 46.39,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 6.21,
+    "progressive_m": -1.35,
+    "mean_speed_ms": 2.73,
+    "nearest_opponent_min_m": 6.87,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00117",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16869,
+   "frame_end": 16901,
+   "time_start": "11:14.76",
+   "duration_s": 1.32,
+   "team": "A",
+   "player_slot": 35,
+   "start_location": {
+    "x_m": 58.91,
+    "y_m": 22.59,
+    "x_att_m": 46.39,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 53.24,
+    "y_m": 32.47,
+    "x_att_m": 52.06,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 30,
+    "recipient_team": "A",
+    "length_m": 11.38,
+    "length_class": "short",
+    "direction": "lateral",
+    "angle_deg": 60.13,
+    "progressive_m": 5.67,
+    "flight_frames": 31,
+    "max_ball_speed_ms": 11.29,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 6.87,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00118",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16901,
+   "frame_end": 16929,
+   "time_start": "11:16.04",
+   "duration_s": 1.16,
+   "team": "A",
+   "player_slot": 30,
+   "start_location": {
+    "x_m": 53.24,
+    "y_m": 32.47,
+    "x_att_m": 52.06,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 52.88,
+    "y_m": 36.07,
+    "x_att_m": 52.42,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 3.62,
+    "progressive_m": 0.36,
+    "mean_speed_ms": 3.12,
+    "nearest_opponent_min_m": 3.24,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00119",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16929,
+   "frame_end": 16987,
+   "time_start": "11:17.16",
+   "duration_s": 2.36,
+   "team": "A",
+   "player_slot": 30,
+   "start_location": {
+    "x_m": 52.88,
+    "y_m": 36.07,
+    "x_att_m": 52.42,
+    "zone": "middle_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 45.72,
+    "y_m": 60.25,
+    "x_att_m": 59.58,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 32,
+    "recipient_team": "A",
+    "length_m": 25.22,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 73.5,
+    "progressive_m": 7.16,
+    "flight_frames": 57,
+    "max_ball_speed_ms": 13.62,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 3.24,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00120",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 16988,
+   "frame_end": 17026,
+   "time_start": "11:19.52",
+   "duration_s": 1.56,
+   "team": "A",
+   "player_slot": 32,
+   "start_location": {
+    "x_m": 45.57,
+    "y_m": 60.4,
+    "x_att_m": 59.73,
+    "zone": "middle_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 32.28,
+    "y_m": 66.54,
+    "x_att_m": 73.02,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 29,
+    "recipient_team": "A",
+    "length_m": 14.64,
+    "length_class": "medium",
+    "direction": "forward",
+    "angle_deg": 24.8,
+    "progressive_m": 13.29,
+    "flight_frames": 37,
+    "max_ball_speed_ms": 12.4,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": true,
+    "into_box": false,
+    "nearest_opponent_m": 10.08,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00121",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 17026,
+   "frame_end": 17046,
+   "time_start": "11:21.04",
+   "duration_s": 0.84,
+   "team": "A",
+   "player_slot": 29,
+   "start_location": {
+    "x_m": 32.28,
+    "y_m": 66.54,
+    "x_att_m": 73.02,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 29.8,
+    "y_m": 66.79,
+    "x_att_m": 75.5,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.49,
+    "progressive_m": 2.48,
+    "mean_speed_ms": 2.97,
+    "nearest_opponent_min_m": 5.03,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00122",
+   "type": "duel",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 17305,
+   "frame_end": 17314,
+   "time_start": "11:32.20",
+   "duration_s": 0.4,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": 1.86,
+    "y_m": 55.35,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": 2.79,
+    "y_m": 55.68,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "home_slot": 9,
+    "away_slot": 32,
+    "winner_team": null,
+    "min_player_distance_m": 0.53
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00123",
+   "type": "ball_out_of_play",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 17456,
+   "frame_end": 17456,
+   "time_start": "11:38.24",
+   "duration_s": 0.04,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": -0.15,
+    "y_m": 30.16,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "central",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": -0.15,
+    "y_m": 30.16,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "central",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.55,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "exit_side": "goal_line_x_min",
+    "last_touch_team": null,
+    "last_touch_slot": null
+   },
+   "related_event_ids": [
+    "E00124"
+   ]
+  },
+  {
+   "id": "E00124",
+   "type": "dead_ball",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 17458,
+   "frame_end": 17843,
+   "time_start": "11:38.32",
+   "duration_s": 15.44,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": -0.54,
+    "y_m": 29.89,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "central",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": 1.05,
+    "y_m": 61.91,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "wide",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.6,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "reason": "out_of_pitch"
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00125",
+   "type": "foul_candidate",
+   "subtype": "penalty_candidate",
+   "period": 1,
+   "frame_start": 17458,
+   "frame_end": 17458,
+   "time_start": "11:38.32",
+   "duration_s": 0.04,
+   "team": "H",
+   "player_slot": null,
+   "start_location": {
+    "x_m": -0.54,
+    "y_m": 29.89,
+    "x_att_m": -0.54,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "end_location": {
+    "x_m": -0.54,
+    "y_m": 29.89,
+    "x_att_m": -0.54,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.5,
+   "sources": [
+    "tracking",
+    "smart_tagging"
+   ],
+   "details": {
+    "offending_team": "H",
+    "fouled_team": "A",
+    "evidence": [
+     "free_kick_tag",
+     "preceding_duel"
+    ],
+    "in_penalty_area": true,
+    "players_within_5m": 0,
+    "preceding_event_id": "E00122"
+   },
+   "related_event_ids": [
+    "E00122",
+    "E00124",
+    "E00126"
+   ]
+  },
+  {
+   "id": "E00126",
+   "type": "restart",
+   "subtype": "free_kick",
+   "period": 1,
+   "frame_start": 17844,
+   "frame_end": 17844,
+   "time_start": "11:53.76",
+   "duration_s": 0.04,
+   "team": "A",
+   "player_slot": 29,
+   "start_location": {
+    "x_m": 1.06,
+    "y_m": 61.8,
+    "x_att_m": 104.24,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 1.06,
+    "y_m": 61.8,
+    "x_att_m": 104.24,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking",
+    "smart_tagging"
+   ],
+   "details": {
+    "restart_team": "A",
+    "team_source": "smart_tagging",
+    "type_source": "smart_tagging",
+    "taker_slot": 29,
+    "set_piece_tag_frames": [
+     17533,
+     18408
+    ],
+    "dead_ball_event_id": "E00124"
+   },
+   "related_event_ids": [
+    "E00124"
+   ]
+  },
+  {
+   "id": "E00127",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 17844,
+   "frame_end": 17874,
+   "time_start": "11:53.76",
+   "duration_s": 1.24,
+   "team": "A",
+   "player_slot": 29,
+   "start_location": {
+    "x_m": 1.06,
+    "y_m": 61.8,
+    "x_att_m": 104.24,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 2.39,
+    "y_m": 63.33,
+    "x_att_m": 102.91,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.02,
+    "progressive_m": -1.33,
+    "mean_speed_ms": 1.63,
+    "nearest_opponent_min_m": 2.65,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00128",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 17874,
+   "frame_end": 17948,
+   "time_start": "11:54.96",
+   "duration_s": 3.0,
+   "team": "A",
+   "player_slot": 29,
+   "start_location": {
+    "x_m": 2.39,
+    "y_m": 63.33,
+    "x_att_m": 102.91,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 26.03,
+    "y_m": 52.94,
+    "x_att_m": 79.27,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 30,
+    "recipient_team": "A",
+    "length_m": 25.82,
+    "length_class": "medium",
+    "direction": "backward",
+    "angle_deg": -156.29,
+    "progressive_m": -23.64,
+    "flight_frames": 73,
+    "max_ball_speed_ms": 13.14,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 2.65,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00129",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 17948,
+   "frame_end": 17972,
+   "time_start": "11:57.92",
+   "duration_s": 1.0,
+   "team": "A",
+   "player_slot": 30,
+   "start_location": {
+    "x_m": 26.03,
+    "y_m": 52.94,
+    "x_att_m": 79.27,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 26.56,
+    "y_m": 51.18,
+    "x_att_m": 78.74,
+    "zone": "final_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 3.21,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00130",
+   "type": "ball_out_of_play",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18025,
+   "frame_end": 18025,
+   "time_start": "12:01.00",
+   "duration_s": 0.04,
+   "team": "A",
+   "player_slot": 30,
+   "start_location": {
+    "x_m": -0.18,
+    "y_m": 25.04,
+    "x_att_m": 105.48,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": -0.18,
+    "y_m": 25.04,
+    "x_att_m": 105.48,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "confidence": 0.55,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "exit_side": "goal_line_x_min",
+    "last_touch_team": "A",
+    "last_touch_slot": 30
+   },
+   "related_event_ids": [
+    "E00131"
+   ]
+  },
+  {
+   "id": "E00131",
+   "type": "dead_ball",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18026,
+   "frame_end": 18234,
+   "time_start": "12:01.04",
+   "duration_s": 8.36,
+   "team": null,
+   "player_slot": null,
+   "start_location": {
+    "x_m": -0.77,
+    "y_m": 24.44,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "central",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "end_location": {
+    "x_m": 2.8,
+    "y_m": 27.66,
+    "x_att_m": null,
+    "zone": null,
+    "lane": "central",
+    "in_opponent_box": null,
+    "in_own_box": null
+   },
+   "confidence": 0.6,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "reason": "out_of_pitch"
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00132",
+   "type": "foul_candidate",
+   "subtype": "penalty_candidate",
+   "period": 1,
+   "frame_start": 18026,
+   "frame_end": 18026,
+   "time_start": "12:01.04",
+   "duration_s": 0.04,
+   "team": "H",
+   "player_slot": null,
+   "start_location": {
+    "x_m": -0.77,
+    "y_m": 24.44,
+    "x_att_m": -0.77,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "end_location": {
+    "x_m": -0.77,
+    "y_m": 24.44,
+    "x_att_m": -0.77,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.4,
+   "sources": [
+    "tracking",
+    "smart_tagging"
+   ],
+   "details": {
+    "offending_team": "H",
+    "fouled_team": "A",
+    "evidence": [
+     "free_kick_tag"
+    ],
+    "in_penalty_area": true,
+    "players_within_5m": 1,
+    "preceding_event_id": null
+   },
+   "related_event_ids": [
+    "E00131",
+    "E00133"
+   ]
+  },
+  {
+   "id": "E00133",
+   "type": "restart",
+   "subtype": "free_kick",
+   "period": 1,
+   "frame_start": 18235,
+   "frame_end": 18235,
+   "time_start": "12:09.40",
+   "duration_s": 0.04,
+   "team": "A",
+   "player_slot": 24,
+   "start_location": {
+    "x_m": 2.76,
+    "y_m": 27.59,
+    "x_att_m": 102.54,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 2.76,
+    "y_m": 27.59,
+    "x_att_m": 102.54,
+    "zone": "final_third",
+    "lane": "central",
+    "in_opponent_box": true,
+    "in_own_box": false
+   },
+   "confidence": 0.8,
+   "sources": [
+    "tracking",
+    "smart_tagging"
+   ],
+   "details": {
+    "restart_team": "A",
+    "team_source": "smart_tagging",
+    "type_source": "smart_tagging",
+    "taker_slot": 24,
+    "set_piece_tag_frames": [
+     17533,
+     18408
+    ],
+    "dead_ball_event_id": "E00131"
+   },
+   "related_event_ids": [
+    "E00131"
+   ]
+  },
+  {
+   "id": "E00134",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18235,
+   "frame_end": 18362,
+   "time_start": "12:09.40",
+   "duration_s": 5.12,
+   "team": "H",
+   "player_slot": 24,
+   "start_location": {
+    "x_m": 2.76,
+    "y_m": 27.59,
+    "x_att_m": 2.76,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "end_location": {
+    "x_m": 4.08,
+    "y_m": 34.5,
+    "x_att_m": 4.08,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 7.03,
+    "progressive_m": 1.32,
+    "mean_speed_ms": 1.37,
+    "nearest_opponent_min_m": 16.69,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00135",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18362,
+   "frame_end": 18399,
+   "time_start": "12:14.48",
+   "duration_s": 1.52,
+   "team": "H",
+   "player_slot": 24,
+   "start_location": {
+    "x_m": 4.08,
+    "y_m": 34.5,
+    "x_att_m": 4.08,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "end_location": {
+    "x_m": 4.65,
+    "y_m": 42.72,
+    "x_att_m": 4.65,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 11,
+    "recipient_team": "H",
+    "length_m": 8.23,
+    "length_class": "short",
+    "direction": "lateral",
+    "angle_deg": 86.04,
+    "progressive_m": 0.57,
+    "flight_frames": 36,
+    "max_ball_speed_ms": 7.32,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 16.69,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00136",
+   "type": "hold",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18399,
+   "frame_end": 18424,
+   "time_start": "12:15.96",
+   "duration_s": 1.04,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 4.65,
+    "y_m": 42.72,
+    "x_att_m": 4.65,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "end_location": {
+    "x_m": 4.81,
+    "y_m": 42.76,
+    "x_att_m": 4.81,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "nearest_opponent_min_m": 15.43,
+    "under_pressure": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00137",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18424,
+   "frame_end": 18460,
+   "time_start": "12:16.96",
+   "duration_s": 1.48,
+   "team": "H",
+   "player_slot": 11,
+   "start_location": {
+    "x_m": 4.81,
+    "y_m": 42.76,
+    "x_att_m": 4.81,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "end_location": {
+    "x_m": 4.9,
+    "y_m": 28.13,
+    "x_att_m": 4.9,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 24,
+    "recipient_team": "H",
+    "length_m": 14.64,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": -89.65,
+    "progressive_m": 0.09,
+    "flight_frames": 35,
+    "max_ball_speed_ms": 14.06,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 15.43,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00138",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18460,
+   "frame_end": 18479,
+   "time_start": "12:18.40",
+   "duration_s": 0.8,
+   "team": "H",
+   "player_slot": 24,
+   "start_location": {
+    "x_m": 4.9,
+    "y_m": 28.13,
+    "x_att_m": 4.9,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "end_location": {
+    "x_m": 6.48,
+    "y_m": 26.84,
+    "x_att_m": 6.48,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.04,
+    "progressive_m": 1.59,
+    "mean_speed_ms": 2.55,
+    "nearest_opponent_min_m": 17.22,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00139",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18479,
+   "frame_end": 18531,
+   "time_start": "12:19.16",
+   "duration_s": 2.12,
+   "team": "H",
+   "player_slot": 24,
+   "start_location": {
+    "x_m": 6.48,
+    "y_m": 26.84,
+    "x_att_m": 6.48,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "end_location": {
+    "x_m": 15.99,
+    "y_m": 10.69,
+    "x_att_m": 15.99,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 16,
+    "recipient_team": "H",
+    "length_m": 18.74,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": -59.5,
+    "progressive_m": 9.51,
+    "flight_frames": 51,
+    "max_ball_speed_ms": 12.61,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 17.22,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00140",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18531,
+   "frame_end": 18547,
+   "time_start": "12:21.24",
+   "duration_s": 0.68,
+   "team": "H",
+   "player_slot": 16,
+   "start_location": {
+    "x_m": 15.99,
+    "y_m": 10.69,
+    "x_att_m": 15.99,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 18.31,
+    "y_m": 8.93,
+    "x_att_m": 18.31,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.91,
+    "progressive_m": 2.31,
+    "mean_speed_ms": 4.28,
+    "nearest_opponent_min_m": 17.62,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00141",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18558,
+   "frame_end": 18591,
+   "time_start": "12:22.32",
+   "duration_s": 1.36,
+   "team": "H",
+   "player_slot": 16,
+   "start_location": {
+    "x_m": 19.85,
+    "y_m": 8.71,
+    "x_att_m": 19.85,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 21.94,
+    "y_m": 9.37,
+    "x_att_m": 21.94,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.19,
+    "progressive_m": 2.09,
+    "mean_speed_ms": 1.61,
+    "nearest_opponent_min_m": 14.27,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00142",
+   "type": "pass",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18591,
+   "frame_end": 18637,
+   "time_start": "12:23.64",
+   "duration_s": 1.88,
+   "team": "H",
+   "player_slot": 16,
+   "start_location": {
+    "x_m": 21.94,
+    "y_m": 9.37,
+    "x_att_m": 21.94,
+    "zone": "defensive_third",
+    "lane": "wide",
+    "in_opponent_box": false,
+    "in_own_box": false
+   },
+   "end_location": {
+    "x_m": 10.47,
+    "y_m": 25.5,
+    "x_att_m": 10.47,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.95,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "outcome": "complete",
+    "recipient_slot": 24,
+    "recipient_team": "H",
+    "length_m": 19.8,
+    "length_class": "medium",
+    "direction": "lateral",
+    "angle_deg": 125.42,
+    "progressive_m": -11.47,
+    "flight_frames": 45,
+    "max_ball_speed_ms": 15.07,
+    "ball_seen_share": 1.0,
+    "is_cross": false,
+    "is_switch_of_play": false,
+    "into_final_third": false,
+    "into_box": false,
+    "nearest_opponent_m": 14.28,
+    "under_pressure": false
+   },
+   "related_event_ids": []
+  },
+  {
+   "id": "E00143",
+   "type": "carry",
+   "subtype": null,
+   "period": 1,
+   "frame_start": 18637,
+   "frame_end": 18665,
+   "time_start": "12:25.48",
+   "duration_s": 1.16,
+   "team": "H",
+   "player_slot": 24,
+   "start_location": {
+    "x_m": 10.47,
+    "y_m": 25.5,
+    "x_att_m": 10.47,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "end_location": {
+    "x_m": 11.21,
+    "y_m": 28.03,
+    "x_att_m": 11.21,
+    "zone": "defensive_third",
+    "lane": "central",
+    "in_opponent_box": false,
+    "in_own_box": true
+   },
+   "confidence": 0.9,
+   "sources": [
+    "tracking"
+   ],
+   "details": {
+    "distance_m": 2.64,
+    "progressive_m": 0.75,
+    "mean_speed_ms": 2.27,
+    "nearest_opponent_min_m": 20.18,
+    "under_pressure": false,
+    "is_dribble": false,
+    "into_final_third": false,
+    "into_box": false,
+    "ball_seen_share": 1.0
+   },
+   "related_event_ids": []
+  }
+ ]
+}
