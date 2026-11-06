@@ -65,3 +65,5 @@ env/
 
 # possession test outputs: frame-level tracking derived from the match data, never publish
 reports/possession_test_1/
+reports/pass_detection/
+reports/gap_classification/
