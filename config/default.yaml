@@ -1,0 +1,34 @@
+# Every threshold of the pipeline. Defaults are UNTUNED starting points taken from the scripts
+# they came from. Tune on the bench only (config/bench.yaml, scripts/bench_score.py) and log every
+# change with its bench score in docs/changelog/. Never tune on BAR-ATH or the public 5 minutes.
+
+ball:                       # possession/preprocess/ball.py  BallConfig
+  max_step_m: 2.0
+  max_speed_ms: 40.0
+  bridge_frames: 6
+  speed_half_window: 4
+  touch_half_window: 3
+  smooth_half: 0
+  out_margin_m: 0.5
+
+players:                    # possession/preprocess/players.py  PlayerConfig
+  smooth_half: 2
+  speed_half_window: 12
+  max_speed_ms: 12.0
+  mean_speed_smooth_s: 1.0
+
+zoi:                        # possession/features/zoi.py  ZoiConfig
+  r0_m: 1.5
+  speed_max_ms: 8.0
+  front_gain: 0.8
+  side_shrink: 0.35
+  rear_shrink: 0.5
+  moving_min_ms: 0.2
+
+control:                    # possession/detectors/control.py  ControlConfig
+  method: distance          # distance (labeller_v1) | zone (possession_test_1)
+  r_m: 1.5
+  margin_m: 0.3
+  max_ball_speed_ms: 12.0
+  max_rel_speed_ms: 4.0
+  contest_as_none: false
