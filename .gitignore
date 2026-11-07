@@ -67,3 +67,10 @@ env/
 reports/possession_test_1/
 reports/pass_detection/
 reports/gap_classification/
+
+#data
+*.json
+*.csv
+
+#folders
+sessions/
