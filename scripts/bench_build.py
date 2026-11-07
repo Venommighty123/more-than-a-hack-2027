@@ -18,17 +18,20 @@ except ImportError:
     from scripts import _bootstrap  # noqa: F401  (python -m scripts.x)
 
 from possession.io.bench import GAMES, SEED, build_bench
+from possession.utils.config import load_config, section
 
 ROOT = _bootstrap.ROOT
+CFG = section(load_config(os.path.join(ROOT, "config", "bench.yaml")), "bench")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--src", default=os.path.join(ROOT, "data", "external", "metrica_sample"))
-    ap.add_argument("--out", default=os.path.join(ROOT, "outputs", "bench"))
+    ap.add_argument("--src", default=os.path.join(ROOT, CFG.get("src", "data/external/metrica_sample")))
+    ap.add_argument("--out", default=os.path.join(ROOT, CFG.get("dir", "outputs/bench")))
     ap.add_argument("--no-degrade", action="store_true", help="write only the clean copies")
-    ap.add_argument("--seed", type=int, default=SEED)
-    ap.add_argument("--games", nargs="+", default=list(GAMES), help="subset, e.g. --games g3")
+    ap.add_argument("--seed", type=int, default=int(CFG.get("seed", SEED)))
+    ap.add_argument("--games", nargs="+", default=list(CFG.get("games", GAMES)),
+                    help="subset, e.g. --games g3")
     ap.add_argument("--kloppy", action="store_true", help="read game 3 with kloppy (needs RAM)")
     args = ap.parse_args()
     build_bench(args.src, args.out, with_degraded=not args.no_degrade, seed=args.seed,

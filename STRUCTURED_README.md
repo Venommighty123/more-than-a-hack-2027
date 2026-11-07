@@ -106,7 +106,7 @@ possession/io ──► possession/preprocess ──► possession/features ─�
 | File | Status | Purpose |
 |---|---|---|
 | `default.yaml` | ✅ | Every threshold, grouped by module (`ball`, `players`, `zoi`, `control`). Untuned starting points; change only with a bench score and a changelog entry |
-| `bench.yaml` | ⬜ | Intended: which bench games / variants to score by default |
+| `bench.yaml` | ✅ | Bench source / output folders, games, default variant and labellers, noise seed — defaults for `bench_build.py` / `bench_score.py` |
 
 Read with `possession.utils.load_config()` → `section(cfg, "ball")` → `BallConfig.from_dict(...)`.
 
@@ -197,13 +197,13 @@ All share `label(px, py, ball, team, blocks, params=None, *, fps, pitch)`. Pick 
 
 Full history and settings tried: `docs/changelog/labeller.md`.
 
-### 8.9 `possession/events/` — football events ⬜
+### 8.9 `possession/events/` — football events ✅
 
-| File | Status | Purpose (to fill from `backup/event_detection.py`, `backup/ashwyn_pass_detection.py`) |
+| File | Status | Purpose |
 |---|---|---|
-| `schema.py` | ⬜ | JSON Schema of the events |
-| `detect.py` | ⬜ | Pass, carry, hold, duel, tackle, interception, restart, out of play, … |
-| `passes.py` | ⬜ | Pass detection on ball flights. Remove the published match stats first (`docs/compliance.md`) |
+| `schema.py` | ✅ | JSON Schema of the 14 event types (safe to share, no data) |
+| `detect.py` | ✅ | Pass, carry, hold, duel, tackle, interception, possession change, restart, out of play, shot, goal, foul candidate — output identical to the old `event_detection.py` |
+| `passes.py` | ✅ | Pass detection on ball flights (Ashwyn) — published match stats, `--real` and `--sweep` removed; output identical otherwise. Defaults still to re-derive on other games |
 
 ---
 
@@ -217,28 +217,33 @@ Full history and settings tried: `docs/changelog/labeller.md`.
 | `bench_score.py` | ✅ | Score labellers on the bench. `--labeller v1 v3c`, `--variant all`, `--set KEY=VALUE` |
 | `build_features.py` | ✅ | Feature table for BAR-ATH or `--bench g1` → `outputs/features/` |
 | `train_classifier.py` | ✅ | Train the classifier on the bench → `outputs/models/classifier.npz` |
-| `audit_data.py`, `classify_gaps.py`, `detect_events.py`, `detect_flights.py`, `detect_passes.py`, `eda_smart_tagging.py` | ⬜ | Command lines for the audit, gap table, events, flights, passes and Smart Tagging statistics |
-| `detect_features.py`, `evauate_dfl.py`, `make_dfl_testset.py` | ⚠️ | Not in the plan (duplicate / DFL parked / typo): delete |
+| `audit_data.py` | ✅ | Data audit: ball-gap histogram, team mapping, homography, tagging coverage → `outputs/audit/` |
+| `classify_gaps.py` | ✅ | One row per ball gap with its class and teams → `outputs/gaps/gaps_classified.csv`; `--no-tags`, `--set` |
+| `detect_events.py` | ✅ | Events JSON + schema → `outputs/events/`; `--full`, `--start/--seconds`, `--validate`, `--schema-only` |
+| `detect_flights.py` | ✅ | Ball flights + in-air flag → `outputs/flights/` (needs scipy) |
+| `detect_passes.py` | ✅ | Passes JSON / CSV → `outputs/passes/` |
+| `eda_smart_tagging.py` | ✅ | Smart Tagging counts, N/A teams, set pieces vs ball gaps, time-base check |
+| `detect_features.py`, `evauate_dfl.py`, `make_dfl_testset.py` | ⚠️ | Deprecated shims that forward to `build_features.py` / `bench_score.py` / `bench_build.py` — delete |
 
-## 10. `viz/` — videos and plots ⬜
+## 10. `viz/` — videos and plots ✅
 
-To fill from `backup/visualize_tracking.py`, `backup/visualize_events.py`, `backup/krish_render_gap_clips.py`, `backup/sample.py`, `backup/possession_visualize.py`.
-
-| File | Purpose |
-|---|---|
-| `common.py` | Shared video reader, pitch panel, timeline, drawing helpers |
-| `render_match.py` | Tactical video + top-down pitch + events, side by side |
-| `render_possession.py` | Labels, control, zones of influence and the possession timeline on video |
-| `render_gaps.py` | One clip per long ball gap |
-| `flight_clips.py` | One clip per ball flight |
-| `possession_definition.py` | What the public ground truth means: segment table and timeline PNG |
-
-## 11. `experiments/` — frozen records ⬜
+Needs opencv-python and ffmpeg (or imageio-ffmpeg). Videos go to `outputs/videos/`.
 
 | File | Purpose |
 |---|---|
-| `possession_test_1.py` | The first zone-of-influence possession test (copy from `backup/`) |
-| `reconstruction_masking.py` | Krish's reconstruction-method comparison |
+| `common.py` | Shared clip readers (tracking, homography, GT, tags), video reader, pitch panel, drawing helpers |
+| `render_match.py` | Tactical video + top-down pitch + events, side by side (`--start 07:27 --duration 60`, `--event-id`, `--no-video`) |
+| `render_possession.py` | The zone-of-influence possession test on video: zones, holder, contests, events, timeline |
+| `render_gaps.py` | One clip per long ball gap (`--min-length`, `--max-clips`, `--dry-run`) |
+| `flight_clips.py` | One clip per ball flight from `outputs/flights/ball_flights.csv` |
+| `possession_definition.py` | What the public ground truth means: segment table, timeline PNG, optional clips → `outputs/possession_definition/` |
+
+## 11. `experiments/` — frozen records ✅
+
+| File | Purpose |
+|---|---|
+| `possession_test_1.py` | The first zone-of-influence possession test (frozen; its logic is `detectors/control.py` method `zone`) |
+| `reconstruction_masking.py` | Krish's reconstruction comparison: Hermite best up to ~1 s (0.13 m vs 1.11 m linear), all methods drift by 5 s |
 
 ## 12. `tests/` — unit tests ⬜
 

@@ -1,0 +1,10 @@
+# The test bench (possession/io/bench.py). Read by scripts/bench_score.py and scripts/bench_build.py
+# for their defaults; command-line flags still win.
+
+bench:
+  src: data/external/metrica_sample     # Metrica public sample games, g1/ g2/ g3/
+  dir: outputs/bench                    # built .npz files (git-ignored)
+  games: [g1, g2, g3]
+  variant: degraded                     # default variant to score: clean | degraded | hard
+  labellers: [v1, baseline50]           # default labellers to score
+  seed: 7                               # degradation noise; build in the pinned environment

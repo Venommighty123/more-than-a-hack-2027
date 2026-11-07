@@ -27,7 +27,7 @@ calibrate them on your old labelled data (a different game, so allowed by RULES.
 public 5 minutes or on hand labels of this match.
 
 Needs numpy and scipy. Usage:
-    python starter/ball_flight.py --out flights.csv
+    python scripts/detect_flights.py            # -> outputs/flights/ball_flights.csv + in_air.npy
 """
 
 import argparse
@@ -377,18 +377,20 @@ def detect_flights(ball_norm, Hn, valid, cfg=None, f=None, verbose=True):
     return flights, in_air
 
 
-def main():
-    here = os.path.dirname(os.path.abspath(__file__))
-    sys.path.insert(0, os.path.dirname(here))
-    sys.path.insert(0, here)
+def main(argv=None):
     import pandas as pd
+    import possession.io  # noqa: F401  (repository root on sys.path)
+    from possession.io import ROOT
     from games import GAME, GAMES, require, source_frames
-    from load_homography import load as load_h
+    from starter.load_homography import load as load_h
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--out", default="flights.csv")
-    parser.add_argument("--frames-out", default="in_air.npy")
-    args = parser.parse_args()
+    out_dir = os.path.join(ROOT, "outputs", "flights")
+    parser = argparse.ArgumentParser(description="Ball-flight detection (outputs are derived match data)")
+    parser.add_argument("--out", default=os.path.join(out_dir, "ball_flights.csv"))
+    parser.add_argument("--frames-out", default=os.path.join(out_dir, "in_air.npy"))
+    args = parser.parse_args(argv)
+    for path in (args.out, args.frames_out):
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
 
     n = source_frames("tactical", GAME)
     cfg = FlightConfig(fps=GAMES[GAME]["fps"], pitch=GAMES[GAME]["pitch"])

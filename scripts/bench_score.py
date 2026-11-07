@@ -21,10 +21,12 @@ import numpy as np
 import possession_metrics as pm
 from possession.io.bench import GAMES, iter_bench
 from possession.labellers import get_labeller
+from possession.utils.config import load_config, section
 from possession.utils.frames import to_codes
 
 ROOT = _bootstrap.ROOT
 VARIANTS = ("clean", "degraded", "hard")
+CFG = section(load_config(os.path.join(ROOT, "config", "bench.yaml")), "bench")
 
 
 def _value(text):
@@ -60,10 +62,10 @@ def score(bench, name, variant="degraded", games=GAMES, params=None, verbose=Tru
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--bench", default=os.path.join(ROOT, "outputs", "bench"))
-    ap.add_argument("--labeller", nargs="+", default=["v1", "baseline50"])
-    ap.add_argument("--variant", default="degraded", choices=VARIANTS + ("all",))
-    ap.add_argument("--games", nargs="+", default=list(GAMES))
+    ap.add_argument("--bench", default=os.path.join(ROOT, CFG.get("dir", "outputs/bench")))
+    ap.add_argument("--labeller", nargs="+", default=list(CFG.get("labellers", ["v1", "baseline50"])))
+    ap.add_argument("--variant", default=CFG.get("variant", "degraded"), choices=VARIANTS + ("all",))
+    ap.add_argument("--games", nargs="+", default=list(CFG.get("games", GAMES)))
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                     help="override a labeller parameter (v1 uses its DEFAULTS keys)")
     args = ap.parse_args()
