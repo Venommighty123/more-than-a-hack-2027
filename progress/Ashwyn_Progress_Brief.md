@@ -6,9 +6,9 @@ you do not need to read anything else first.
 
 Status in one paragraph: we have a **validated safe submission** (`labeller_v6`) that scores
 roughly twice the published baseline on our test benches. It is ready to upload to the Google
-Form. Our own team target for that upload is **Nov 10** (the organisers' only deadline is Nov 17). We reached it in six versions, each one tested
-only on other matches, as the rules require. Tuning of the current approach is close to its
-ceiling; one last experiment is paused (section 10), and after it the plan is to move to the
+Form. We reached it in six versions, each one tested
+only on other matches, as the rules require. Tuning of the current approach has reached its
+ceiling: the last experiment (section 10) found nothing that holds on every truth, so the plan is to move to the
 freeze work: rule cleanup, a one-command reproducible pipeline, and the technical document.
 
 ---
@@ -73,8 +73,7 @@ score. There is no jury and no presentation mark.
   leaderboard and no feedback before the deadline.**
 - **Name the files after the team:** `<team_name>.csv` and `<team_name>.pdf` (SUBMISSION.md: the
   board names each row after the file).
-- **Our own team milestones** (from our Nov 3 game plan, not the organisers): safe submission
-  uploaded **by Nov 10**, code freeze **Nov 15**, submit **Nov 16** (one day of buffer).
+- **Our own team milestones** (from our Nov 3 game plan, not the organisers): code freeze **Nov 15**, submit **Nov 16** (one day of buffer).
 
 ---
 
@@ -242,7 +241,7 @@ label(px, py, ball, team, blocks, params=None, tags=None) -> array of "H"/"A"/"D
 
 | File | md5 (first 8) | Status |
 |---|---|---|
-| `SAFE_SUBMISSION_labeller_v6.csv` | `6d084c06` | **current safe file, validated, to upload by Nov 10** |
+| `SAFE_SUBMISSION_labeller_v6.csv` | `6d084c06` | **current safe file, validated** |
 | `SAFE_SUBMISSION_labeller_v4.csv` | `68952c15` | backup |
 | `SAFE_SUBMISSION_labeller_v2_1.csv` | `ed254a5a` | older backup |
 
@@ -369,7 +368,7 @@ Output: H / A / D for every graded frame (never X).
 | Nov 8 | **v5**: hand-over detector; new tracking truth | v5 gains didn't hold; **not adopted** |
 | Nov 8 | **v6**: false-change cuts + dead-ball timing | **current safe file** |
 | Nov 8-9 | DFL third truth, 7 matches | v4/v6 confirmed; conflict on "more vs fewer changes" |
-| Nov 9 | 3-truth grid (reception vote in v6) | **paused** for this brief |
+| Nov 9 | 3-truth grid (reception vote in v6) | nothing passes; **v6 stays, tuning stops** |
 
 ### 7.2 What each version changed and why
 
@@ -548,8 +547,34 @@ possessions, so **it is noise and we ignore it on purpose** (rule 3).
   switching, to find out whether there is a middle point that loses on no truth.
 - **Decision rule:** adopt a setting **only if it doesn't lose on any truth**. Otherwise v6 stays
   and tuning stops.
-- **Status:** the grid is about 45% done and **paused** for this brief. It resumes when Ashwyn
-  says so (~30-40 min of compute left).
+- **Status:** done (Nov 9).
+
+### 10.1 Result of the grid
+
+Change against v6, mean of `real` and `real_occ`. "Worst cell" is the worst single match x copy x
+truth change (26 cells).
+
+| Setting | EV | TRK (main judge) | DFL | Worst cell | Cells up |
+|---|---|---|---|---|---|
+| v6 (score) | 0.510 | 0.560 | 0.464 | | |
+| CONFIRM 4 | -0.001 | -0.019 | +0.003 | -0.037 | 12/26 |
+| CONFIRM 5 | -0.005 | -0.008 | +0.003 | -0.014 | 10/26 |
+| MIN_SPELL 1.5 | -0.003 | -0.007 | +0.014 | -0.030 | 18/26 |
+| CONFIRM 4 + MIN_SPELL 1.5 | -0.004 | -0.029 | +0.020 | -0.057 | 17/26 |
+| CONFIRM 5 + MIN_SPELL 1.5 | -0.009 | -0.019 | +0.018 | -0.040 | 14/26 |
+| reception vote | +0.010 | -0.013 | +0.008 | -0.029 | 17/26 |
+| reception vote + CONFIRM 5 | +0.004 | -0.021 | +0.007 | -0.031 | 15/26 |
+| reception vote + MIN_SPELL 1.5 | +0.012 | -0.022 | +0.026 | -0.035 | 19/26 |
+
+- **No setting passes the acceptance rule.** Every one loses on the tracking truth (-0.007 to
+  -0.029), the truth that matches the board's baseline shape best, and every one gains on DFL, the
+  least board-like. Same split as before: faster switching helps a truth that seems to count every
+  touch and hurts one that counts possessions.
+- **The reception vote still loses on the tracking truth with v6** (-0.013; with v4 it was -0.010):
+  v6's stricter switch margin did not remove its false receptions. The switch stays out of the PC
+  copy of `labeller_v6.py`.
+- **Decision: v6 stays the safe submission, and tuning of the control rule stops here.** Next is
+  the freeze work in section 11. The full table is in `labeller_v1_CHANGELOG.md`.
 
 ---
 
@@ -559,7 +584,6 @@ possessions, so **it is noise and we ignore it on purpose** (rule 3).
 
 | When | What | Owner (proposed) |
 |---|---|---|
-| **Nov 10** (team target) | **Upload `SAFE_SUBMISSION_labeller_v6.csv` to the Google Form**, renamed `<team_name>.csv` (responses are editable, so this only protects us) | Ashwyn |
 | Nov 9-10 | Finish the 3-truth grid; adopt a setting only if it loses nowhere; log the result | Ashwyn |
 | Nov 10-12 | **Merge the team's branches**: review each teammate's work against the rules and the bench (section 12) | whole team |
 | Nov 10-13 | Any last idea that adds **new evidence** (11.3), tested on the bench with the same acceptance rule | whoever owns it |
@@ -572,7 +596,7 @@ possessions, so **it is noise and we ignore it on purpose** (rule 3).
 
 ### 11.2 Strategy
 
-1. **Protect what we have first.** Upload v6 by Nov 10. A missed deadline or a broken repo is a
+1. **Protect what we have first.** A missed deadline or a broken repo is a
    total loss; a slightly better labeller is a small gain.
 2. **Stop tuning thresholds.** Gains inside the 0.04 noise band can't be trusted to carry over, and
    the control rule has plateaued. Only new *kinds* of evidence are worth the remaining time.
@@ -597,23 +621,20 @@ possessions, so **it is noise and we ignore it on purpose** (rule 3).
 
 ## 12. Key points to discuss in the meeting
 
-1. **Safe upload by Nov 10 (our own target).** Confirm who uploads v6, who has the form link (it
-   comes by email to registered participants), the exact team name for the file names, and that
-   whoever uploads has a Google account.
-2. **What has each of you built in the last 3 days?** For each branch: what it does, whether it
+1. **What has each of you built in the last 3 days?** For each branch: what it does, whether it
    was tested on other matches only, and its score on our bench (we can score any `label()`
    function on all three truths; send it over).
-3. **Rule check of every branch.** Any hand labels, video verdicts, match stats or settings picked
+2. **Rule check of every branch.** Any hand labels, video verdicts, match stats or settings picked
    by the public 5 minutes on BAR-ATH? Anything found goes on the cleanup list before Nov 15.
-4. **One integration path.** Agree on one `main`-line labeller (v6 unless a branch beats it on the
+3. **One integration path.** Agree on one `main`-line labeller (v6 unless a branch beats it on the
    bench by the acceptance rule) and one place to log decisions (`labeller_v1_CHANGELOG.md`).
-5. **Owners for the freeze work:** rule cleanup, the reproducible entry point and pinned deps, the
+4. **Owners for the freeze work:** rule cleanup, the reproducible entry point and pinned deps, the
    technical document, the final clean-checkout check.
-6. **The "more vs fewer changes" question.** Our best-calibrated truth says fewer, DFL says more.
+5. **The "more vs fewer changes" question.** Our best-calibrated truth says fewer, DFL says more.
    v6 bets on fewer. Does anyone's work or reading of CHALLENGE.md suggest otherwise?
-7. **Should we spend time on one more evidence source** (camera aim, XML channels) or go straight
+6. **Should we spend time on one more evidence source** (camera aim, XML channels) or go straight
    to freeze work? Proposed: freeze work first, new evidence only with spare hands.
-8. **Repository hygiene:** `.gitignore` covers `data/`, `bench_data/` and generated reports; no
+7. **Repository hygiene:** `.gitignore` covers `data/`, `bench_data/` and generated reports; no
    match data in any branch before the repo goes public.
 
 ---

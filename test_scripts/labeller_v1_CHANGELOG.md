@@ -477,3 +477,54 @@ in two, which costs two spells.
 +0.020 on the mean of both truths, up on all four copy x truth means; the worst single game cell
 is -0.005. `run_labeller_v6.py --as-v4` turns every v6 switch off and reproduces v4 byte for byte
 (checked on a bench stand-in).
+
+---
+
+# Third truth and last grid (Nov 8-9, session 2). Nothing adopted. v6 stays; tuning stops.
+
+## DFL / IDSSE third truth
+
+7 public Bundesliga matches (Bassek et al., Sci Data 12, 195, 2025, CC-BY 4.0), fetched on the PC
+with `test_scripts/bench/fetch_dfl_bench.py`. Truth = the DFL's own per-frame `BallPossession` /
+`BallStatus` channels. Copies `real` / `real_occ` built like the Metrica ones but WITHOUT the carry
+offset (the DFL ball is already ~1.37 m from the nearest player in play, like BAR-ATH's 1.24 m).
+Baseline window shape on this truth: w25/w50 ~1.0, w125/w50 ~0.76 in all 7 matches (board 0.82 /
+0.92), and ~406 changes per match: it counts more, shorter possessions than the organisers seem to.
+
+| config (mean of 7 matches) | real | real_occ | mean | changes pred / true |
+|---|---|---|---|---|
+| v2.1 | 0.466 | 0.436 | 0.451 | 190 / 406 |
+| v4 | 0.483 | 0.452 | 0.468 | 205 / 406 |
+| v6 | 0.478 | 0.451 | 0.464 | 200 / 406 |
+| v5 reception vote | 0.490 | 0.455 | 0.473 | 211 / 406 |
+| v4, CONFIRM 3 + MIN_SPELL 1 | 0.524 | 0.481 | 0.503 | 282 / 406 |
+| v4, MIN_SPELL 3 | 0.450 | 0.431 | 0.440 | 181 / 406 |
+
+v4 > v2.1 holds on this third truth; v6 ~ v4 (tie). Faster switching wins here but loses ~0.08 on
+the Metrica tracking truth, the best-calibrated one.
+
+## Grid on all three truths (EV, TRK, DFL; mean of real / real_occ; 26 cells = 3 Metrica x 2 truths x 2 copies + 7 DFL x 2 copies)
+
+`HO_RECV` (v5's reception vote injected as control evidence) was added as a switch to a cloud test
+copy of `labeller_v6.py` (default off). It is NOT on the PC file, because it was not adopted.
+
+| config | EV | TRK | DFL | ΔEV | ΔTRK | ΔDFL | worst cell | cells up |
+|---|---|---|---|---|---|---|---|---|
+| v6 | 0.510 | 0.560 | 0.464 | | | | | |
+| CONFIRM 4 | 0.509 | 0.542 | 0.468 | -0.001 | -0.019 | +0.003 | -0.037 | 12/26 |
+| CONFIRM 5 | 0.505 | 0.552 | 0.467 | -0.005 | -0.008 | +0.003 | -0.014 | 10/26 |
+| MIN_SPELL 1.5 | 0.508 | 0.553 | 0.479 | -0.003 | -0.007 | +0.014 | -0.030 | 18/26 |
+| CONFIRM 4 + MIN_SPELL 1.5 | 0.506 | 0.531 | 0.484 | -0.004 | -0.029 | +0.020 | -0.057 | 17/26 |
+| CONFIRM 5 + MIN_SPELL 1.5 | 0.501 | 0.541 | 0.482 | -0.009 | -0.019 | +0.018 | -0.040 | 14/26 |
+| reception vote | 0.520 | 0.547 | 0.473 | +0.010 | -0.013 | +0.008 | -0.029 | 17/26 |
+| reception vote + CONFIRM 5 | 0.514 | 0.540 | 0.471 | +0.004 | -0.021 | +0.007 | -0.031 | 15/26 |
+| reception vote + MIN_SPELL 1.5 | 0.522 | 0.538 | 0.490 | +0.012 | -0.022 | +0.026 | -0.035 | 19/26 |
+
+- **Every setting loses on the tracking truth** (-0.007 to -0.029), the truth that matches the
+  board's baseline shape best. All of them gain on DFL, the least board-like. Same split as before:
+  more changes help a truth that counts every touch and hurt one that counts possessions.
+- The reception vote with v6's stricter switch margin still loses on TRK (-0.013, with v4 it was
+  -0.010). The margin did not remove its false receptions.
+- **Rule: a change must not lose on any truth. Nothing passes. v6 stays the safe submission, and
+  tuning of the control rule stops here.** Next: freeze work (rule cleanup, reproducible entry
+  point, pinned dependencies, technical document).
