@@ -329,3 +329,151 @@ everything else = v2.1. `--stop-mode full --ctrl-r 1.5` reproduces v2.1 exactly 
   in live play (keeper on the ball, slow build-up), and a D in the middle of a real possession
   splits it into two, which costs spellF1 more than fixing the few hidden stoppages gains.
   `LONG_SLOW=None` stays the default; with it, v4's output is unchanged.
+
+---
+
+# v5 (Nov 8, session 2): hand-over detector. Tested, NOT adopted. v4 stays.
+
+Files: `test_scripts/labeller_v5.py` (experimental, switches only), `test_scripts/bench/build_trk_gt.py`
+(new tracking-based bench truth), `test_scripts/bench/hutil.py` (change finder).
+
+**Why:** perfect team on v4's live frames would lift the bench `real` from 0.516 to 0.890
+(perfect D/live only to 0.536). v4 finds 40% of the bench's H<->A hand-overs within 2 s, and 33% of
+its changes are false.
+
+**Pieces (all switchable):** `HO_RECV` (vote on who receives the ball when a flight > 7 m/s ends),
+`HO_FLIGHT` (no control while the ball flies), `HO_GAP` (vote when the ball reappears), `HO_KEEP`
+(reception spells exempt from MIN_SPELL merging), `HO_PROTECT` (ignore the old team's control after
+a reception), `RESOLVE_MODE="density"` (switch on N of the last W frames instead of a run).
+
+## Against the event-based truth (as before), mean real / real_occ
+
+| | real | real_occ | R+O | worst game |
+|---|---|---|---|---|
+| v4 | 0.516 | 0.462 | 0.489 | 0.424 |
+| recv | 0.521 | 0.476 | 0.499 | 0.426 |
+| flight + recv | 0.510 | 0.471 | 0.490 | 0.420 |
+| all on | 0.512 | 0.470 | 0.491 | 0.420 |
+| recv + keep | 0.520 | 0.482 | 0.501 | 0.415 |
+| recv + density (6 of 25, +3) | 0.528 | 0.484 | 0.506 | 0.445 |
+
+Best +0.017: inside the noise band. Diagnosis: even on the CLEAN copy v4 finds only 51% of the
+event truth's hand-overs, and more eager settings find 66% but score lower. Over half of the
+"false" changes are the right team but a median 9.5 s late. The event truth switches when an event
+is logged, which the tracking often does not show at that moment.
+
+## New: a tracking-based bench truth (`build_trk_gt.py`)
+
+The organisers' truth comes from corrected tracking, so we built one the same way. Live frames:
+the team of the player the ball is on in Metrica's CLEAN tracking (ball within 0.5 m, other team
+at least 0.5 m further, for at least 3 frames); flights, loose and contested balls keep the last
+team; D / X copied from the event truth. 92-94% of live frames agree with the event truth; it has
+fewer hand-overs (585 vs 846 over 3 games).
+
+Calibration check against the published board baselines (baseline windows 0 / 25 / 50 / 125 on `real`):
+
+| truth | spellF1 | w25/w50 | w125/w50 |
+|---|---|---|---|
+| board (BAR-ATH) | 0.049 / 0.200 / 0.243 / 0.224 | 0.82 | 0.92 |
+| event truth | 0.072 / 0.249 / 0.287 / 0.235 | 0.87 | 0.82 |
+| tracking truth (0.5 m, 0.5 m, 3 fr) | 0.055 / 0.228 / 0.282 / 0.263 | 0.81 | 0.93 |
+| tracking truth (1.0 m, 0.3 m, 3 fr) | 0.118 / 0.287 / 0.284 / 0.202 | 1.01 | 0.71 |
+
+The 0.5 / 0.5 / 3 tracking truth reproduces the board's shape best, so it is the second truth.
+
+## Against the tracking-based truth
+
+| | real | real_occ | R+O | worst game |
+|---|---|---|---|---|
+| v2.1-like (rule C full, R 1.5) | 0.544 | 0.512 | 0.528 | 0.479 |
+| **v4** | **0.563** | **0.518** | **0.541** | **0.499** |
+| recv | 0.556 | 0.505 | 0.530 | 0.475 |
+| all on | 0.557 | 0.505 | 0.531 | 0.479 |
+| recv + keep | 0.538 | 0.487 | 0.512 | 0.443 |
+| density only | 0.566 | 0.522 | 0.544 | 0.497 |
+| recv + density | 0.561 | 0.506 | 0.534 | 0.483 |
+| v4, CONFIRM 3, MIN_SPELL 1 | 0.486 | 0.440 | 0.463 | 0.408 |
+| v4, MIN_SPELL 3 | 0.562 | 0.529 | 0.546 | 0.508 |
+
+- **The v5 gains do not hold:** the reception vote loses 0.010 on this truth. They came from
+  chasing the event truth's extra hand-overs. **Not adopted.**
+- v4 > v2.1 holds on this truth too (+0.012), so the safe-file decision stands.
+- Oracles on this truth: perfect team 0.860 / 0.884, perfect D 0.595 / 0.546 (v4 0.563 / 0.518).
+  The team is still where the headroom is, but more change detection is not the way; on this
+  truth v4 already predicts more changes (640) than there are (585), and 40% of them are false.
+
+**Rule from now on:** a change must not lose on either truth (event and tracking) on either
+realistic copy.
+
+---
+
+# v6 (Nov 8, session 2): cutting false changes. Small gain, inside noise. Not adopted yet.
+
+File: `test_scripts/labeller_v6.py` (v4 + switches, all default off, so it equals v4).
+Scored on both truths (event `EV`, tracking `TRK`), each the mean of `real` and `real_occ`;
+BOTH = their mean; "worst" = the worst change of any of the 12 game x copy x truth cells vs v4.
+
+**What is wrong (tracking truth, 549 false changes over 6 copies):** 56% right team but > 2 s off,
+mostly late (median 8.5 s; the new team controls the ball on 18% of the frames in between, the
+old one on 6%); 21% A-B-A blips (the blip team controls the ball on only 18% of its frames);
+12% wrong team before a stoppage; 8% wrong team picked after a stoppage; 3% truth is D.
+
+| setting | EV | TRK | BOTH | worst | changes (real) |
+|---|---|---|---|---|---|
+| v4 | 0.489 | 0.541 | 0.515 | 0 | 640 |
+| `SMOOTH_K` 2 / 3 / 4 / 8 | 0.497 / 0.499 / 0.499 / 0.483 | 0.544 / 0.542 / 0.542 / 0.522 | 0.520 / 0.521 / 0.521 / 0.503 | -0.009 / -0.008 / -0.006 / -0.035 | |
+| `SW_MARGIN` 0.45 / 0.6 / 0.8 / 1.0 | 0.491 / 0.495 / 0.489 / 0.485 | 0.540 / 0.546 / 0.539 / 0.537 | 0.516 / 0.520 / 0.514 / 0.511 | | 632 (0.6) |
+| `WEAK_MERGE` 0.2 / 0.3, 8 s | 0.481 / 0.471 | 0.550 / 0.541 | 0.515 / 0.506 | -0.025 / -0.035 | 578 / 530 |
+| `MIN_SPELL` 3 / 4 | 0.475 / 0.453 | 0.546 / 0.528 | 0.511 / 0.491 | -0.024 / -0.052 | 540 / 476 |
+| density 6 of 25 | 0.493 | 0.544 | 0.518 | -0.011 | 620 |
+| `FOLLOW` (ball moves with the player) | 0.487-0.490 | 0.534-0.540 | 0.510-0.515 | -0.009..-0.021 | |
+| **SMOOTH_K 3 + SW_MARGIN 0.6** | **0.503** | **0.549** | **0.526** | -0.013 | 630 |
+| + WEAK_MERGE 0.15 | 0.499 | 0.556 | 0.527 | -0.021 | 596 |
+
+- Best: smoothing positions over +/- 3 frames plus a 0.6 m switch margin: +0.011 BOTH, up on
+  event real / occ (+0.016 / +0.011) and tracking real (+0.017), flat on tracking occ (-0.0004).
+  Inside the 0.04 noise band.
+- Merging weak blips and longer MIN_SPELL help the tracking truth but hurt the event truth: they
+  remove short real possessions as well as blips.
+- "Ball moves with the player" control adds nothing: on the bench the offset drifts slowly, so
+  velocity matching sees the same ambiguity as distance.
+- **Reading:** with a ball ~1 m off the player, frame-level control evidence has a ceiling. All
+  control-rule variants since v4 land at BOTH 0.51-0.53.
+
+## v6 dead-ball timing (Nov 8). Kept: `MIN_D` 2 s. Rejected: gap split, shorter walk-back, gap delay.
+
+**What was wrong** (tracking truth, `real`, 3 games, 289 true stoppages): v4 predicted 322; 55 were
+false, median **0.8 s** long; 18 missed; 14% started more than 2 s early (p10 -5.5 s). Live frames
+labelled D 5.5%, dead frames labelled live 2.4%. A 0.8 s D in the middle of a possession splits it
+in two, which costs two spells.
+
+| setting | EV | TRK | BOTH | worst |
+|---|---|---|---|---|
+| v4 | 0.489 | 0.541 | 0.515 | 0 |
+| `MIN_D` 1 / 2 / 3 s, ball-out stretches kept | 0.491 / 0.491 / 0.489 | 0.543 / 0.543 / 0.542 | 0.517 / 0.517 / 0.516 | 0 / +0.001 / -0.002 |
+| `MIN_D` 1 / 1.5 / 2 / 3 / 4 s, all short D dropped | 0.498 / 0.500 / **0.500** / 0.498 / 0.496 | 0.553 / 0.556 / **0.556** / 0.553 / 0.551 | 0.525 / 0.528 / **0.528** / 0.526 / 0.524 | -0.001 / +0.001 / **+0.003** / +0.003 / +0.003 |
+| walk-back capped at 5 / 3 s | 0.489 / 0.490 | 0.541 / 0.541 | 0.515 / 0.515 | -0.004 / -0.003 |
+| D starts 0.5 / 1 s after the ball vanishes | 0.485 / 0.482 | 0.538 / 0.535 | 0.512 / 0.509 | -0.008 / -0.011 |
+| `MIN_D` 2 + gap split at rel < 0.55 / 0.7 / 0.85 / 1.0 | 0.479-0.496 | 0.535-0.552 | 0.507-0.524 | -0.017..+0.002 |
+
+- **`MIN_D` 2 s (dropping ball-out stretches too): +0.013, better in all 12 game x copy x truth
+  cells.** Flat from 1.5 to 4 s, so not fragile. After it: 13 false stoppages instead of 55.
+- Most short false D's on the bench have the ball briefly over a line. The bench draws the ball
+  ~1 m off the carrier, which pushes it over the touchline when he runs along it. **On BAR-ATH v4
+  has only 4 D stretches under 3 s**, so expect a much smaller effect there.
+- Early starts (70% of them): the ball vanishes about 10 s before the real stoppage and rule B
+  makes the whole gap D. Starting D where the players slow down instead (gap split) loses: in a
+  gap the players' slowing is not a reliable whistle signal on the bench.
+
+## v6 defaults (Nov 8)
+
+`SMOOTH_K=3`, `SW_MARGIN=0.6`, `MIN_D=2.0`, `MIN_D_KEEP_OUT=False`; everything else = v4.
+
+| | ev real | ev occ | trk real | trk occ | BOTH | worst cell |
+|---|---|---|---|---|---|---|
+| v4 | 0.516 | 0.462 | 0.563 | 0.518 | 0.515 | |
+| **v6** | **0.542** | **0.478** | **0.596** | **0.525** | **0.535** | -0.005 |
+
++0.020 on the mean of both truths, up on all four copy x truth means; the worst single game cell
+is -0.005. `run_labeller_v6.py --as-v4` turns every v6 switch off and reproduces v4 byte for byte
+(checked on a bench stand-in).

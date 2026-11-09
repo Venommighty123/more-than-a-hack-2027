@@ -74,3 +74,5 @@ reports/gap_classification/
 
 #folders
 sessions/
+# public DFL/IDSSE bench matches (CC-BY 4.0, large; regenerate with test_scripts/bench/fetch_dfl_bench.py)
+bench_data/
