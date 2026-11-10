@@ -76,3 +76,6 @@ reports/gap_classification/
 sessions/
 # public DFL/IDSSE bench matches (CC-BY 4.0, large; regenerate with test_scripts/bench/fetch_dfl_bench.py)
 bench_data/
+
+# labeller video visualiser output (derived from match data)
+reports/labeller_viz/
