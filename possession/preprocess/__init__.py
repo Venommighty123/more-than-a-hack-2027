@@ -7,4 +7,4 @@ import possession.io  # noqa: F401  (puts the repository root on sys.path)
 
 from .ball import BallConfig, BallTrack, clean_ball  # noqa: E402,F401
 from .players import PlayerConfig, PlayerState, prepare_players  # noqa: E402,F401
-from .reconstruct import reconstruct  # noqa: E402,F401
+from .reconstruct import load_ball_file, prepare_ball, reconstruct  # noqa: E402,F401

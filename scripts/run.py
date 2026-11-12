@@ -3,6 +3,13 @@
     python scripts/run.py                                  # labeller v1 -> outputs/submissions/v1.csv
     python scripts/run.py --labeller baseline50
     python scripts/run.py --out outputs/submissions/try.csv --no-cache
+    python scripts/run.py --labeller v5                    # uses outputs/ball/ball_reconstructed.npz
+    python scripts/run.py --labeller v5 --set CONFIRM=6 --out outputs/submissions/v5_confirm6.csv
+
+Labellers that accept ``ball_source`` (v5) get the prepared ball written by
+scripts/reconstruct_ball.py when the file exists (--no-ball-file to ignore it); they compute the
+same thing in memory otherwise. ``--set KEY=VALUE`` overrides a labeller parameter (as in
+scripts/bench_score.py) -- only for settings already scored on the bench.
 
 Replaces Ashwyn's test_scripts/run_labeller_v1.py. What it prints is safe to share (no raw data):
 
@@ -34,6 +41,7 @@ import possession_metrics as pm
 from games import GAME, GAMES, anchor_video_frame
 from possession.io import graded_blocks, load, load_tags
 from possession.labellers import get_labeller
+from possession.preprocess.reconstruct import DEFAULT_FILE, load_ball_file
 
 ROOT = _bootstrap.ROOT
 N_FRAMES = GAMES[GAME]["n_video_frames"]
@@ -71,6 +79,28 @@ def describe(labels, blocks):
     print("stoppages (D stretches): {}".format(stops))
 
 
+def _value(text):
+    for cast in (int, float):
+        try:
+            return cast(text)
+        except ValueError:
+            pass
+    return {"True": True, "False": False, "None": None}.get(text, text)
+
+
+def tag_input(fn, tr):
+    """Smart Tagging in the form the labeller expects: Tag records (v2) or set-piece start frames
+    (v4 / v5 / v6, Ashwyn's run_labeller_v4.load_set_piece_frames)."""
+    tags = load_tags(tr.teams)
+    module = getattr(fn, "__module__", "")
+    if module.endswith((".v4", ".v5", ".v6")):
+        frames = sorted(t.start_frame for t in tags
+                        if (getattr(t, "code", "") or "").strip().lower() == "set pieces")
+        print("set-piece tags: {}".format(len(frames)))
+        return np.array(frames, dtype=int) - tr.lo
+    return tags
+
+
 def write_csv(path, labels):
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", newline="") as handle:
@@ -83,6 +113,11 @@ def main():
     ap.add_argument("--labeller", default="v1", help="registered name or package.module")
     ap.add_argument("--out", default=None, help="default outputs/submissions/<labeller>.csv")
     ap.add_argument("--no-cache", action="store_true", help="re-read the raw tracking file")
+    ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
+                    help="override a labeller parameter, e.g. --set CONFIRM=6")
+    ap.add_argument("--ball-file", default=os.path.join(ROOT, DEFAULT_FILE),
+                    help="prepared ball for labellers that take ball_source (v5)")
+    ap.add_argument("--no-ball-file", action="store_true", help="always prepare the ball in memory")
     ap.add_argument("--bench-pitch", action="store_true",
                     help="use 105 x 68 like the bench (reproduces the original v1 file exactly)")
     args = ap.parse_args()
@@ -98,11 +133,25 @@ def main():
     blocks, kickoff2 = play_blocks()
     pitch = (105.0, 68.0) if args.bench_pitch else tr.pitch
     fn = get_labeller(args.labeller)
+    sig = inspect.signature(fn).parameters
+    params = dict((k, _value(v)) for k, v in (x.split("=", 1) for x in args.set)) or None
+    if params:
+        print("parameter overrides: {}".format(params))
     extra = {}
-    if "tags" in inspect.signature(fn).parameters:      # labellers that can use Smart Tagging
-        extra["tags"] = load_tags(tr.teams)
-    labels = np.asarray(fn(tr.px, tr.py, tr.ball, tr.teams.team, blocks, fps=tr.fps, pitch=pitch,
-                           **extra))
+    if "tags" in sig:                                   # labellers that can use Smart Tagging
+        extra["tags"] = tag_input(fn, tr)
+    if "ball_source" in sig and not args.no_ball_file:
+        if os.path.exists(args.ball_file):
+            extra["ball_source"] = load_ball_file(args.ball_file)
+            bs = extra["ball_source"]
+            print("ball source file: {} ({} up to {} frames, gate {} m/s)".format(
+                os.path.relpath(args.ball_file, ROOT), bs["method"], bs["max_gap"],
+                bs["max_speed_ms"]))
+        else:
+            print("no {}: the ball is prepared in memory (scripts/reconstruct_ball.py writes it)"
+                  .format(os.path.relpath(args.ball_file, ROOT)))
+    labels = np.asarray(fn(tr.px, tr.py, tr.ball, tr.teams.team, blocks, params, fps=tr.fps,
+                           pitch=pitch, **extra))
     for half, a, _ in graded_blocks():
         if half == 2:
             labels[a:kickoff2] = "D"

@@ -53,7 +53,7 @@ from possession.io.teams import load_teams
 DEFAULT_OUT = os.path.join(_bootstrap.ROOT, "outputs", "events")
 
 
-def parse_args():
+def parse_args(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0],
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--schema-only", action="store_true", help="write event_schema.json and stop (no data needed)")
@@ -84,7 +84,7 @@ def parse_args():
     g.add_argument("--shot-min-speed", type=float, default=14.0, help="m/s")
     g.add_argument("--shot-max-dist-m", type=float, default=40.0)
     g.add_argument("--shot-goal-margin-m", type=float, default=2.0, help="slack either side of the posts")
-    return ap.parse_args()
+    return ap.parse_args(argv)
 
 
 def main():

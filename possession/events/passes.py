@@ -80,8 +80,9 @@ import possession.io  # noqa: F401,E402  (repository root on sys.path)
 from possession.io import ROOT  # noqa: E402
 from games import (GAME, GAMES, anchor_video_frame, half_video_blocks, require,  # noqa: E402
                    source_frames)
-from possession.features.flight import (FlightConfig, detect_candidates,  # noqa: E402
-                                        fill_short_gaps, finite_runs)
+from possession.features.flight import (FlightConfig, fill_short_gaps,  # noqa: E402
+                                        finite_runs)
+from possession.features.flight import detect_candidates_legacy as detect_candidates  # noqa: E402
 
 # -- params (all overridable from the command line) ------------------------------------------
 KICK_SPEED = 5.0         # m/s   ball faster than this starts a kick candidate (ball_flight: 12)
@@ -459,7 +460,7 @@ def aimed_at_goal(x0, y0, x1, y1, sign):
 def detect_passes(px, py, ball, team_of_slot, lo, blocks, kickoffs, names, args, height=None):
     cfg = replace(FlightConfig(fps=FPS, pitch=(PITCH_L, PITCH_W)),
                   start_speed=args.kick_speed, stop_speed=KICK_STOP_SPEED,
-                  min_flight_frames=KICK_MIN_FRAMES)
+                  min_flight_frames=KICK_MIN_FRAMES, smooth_window=5)   # Nov 7 detector settings
     ball = clean_ball(ball)
     observed = ~np.isnan(ball).any(axis=1)
     filled, _ = fill_short_gaps(ball, cfg.max_gap)
@@ -606,7 +607,7 @@ def detect_passes(px, py, ball, team_of_slot, lo, blocks, kickoffs, names, args,
 
 def make_height_fn(lo, n, cfg):
     """Wrap ball_flight's parabola fit for one pass. Needs pandas + scipy + the homography."""
-    from starter.ball_flight import _characterise, estimate_focal
+    from possession.features.flight import _characterise, estimate_focal
     from starter.load_homography import load as load_h
     Hn, _, valid = load_h()
     Hn, valid = Hn[lo:lo + n], valid[lo:lo + n]

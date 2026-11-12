@@ -2,6 +2,7 @@
 
     python scripts/bench_build.py                                   # data/external/metrica_sample -> outputs/bench
     python scripts/bench_build.py --src <folder with g1/ g2/ g3/> --out outputs/bench --no-degrade
+    python scripts/bench_build.py --real-only                       # only the real / real_occ copies
 
 The source folder holds Metrica's public sample games (github.com/metrica-sports/sample-data):
   g1/Sample_Game_1_RawEventsData.csv, ..._RawTrackingData_Home_Team.csv, ..._Away_Team.csv
@@ -17,7 +18,7 @@ try:
 except ImportError:
     from scripts import _bootstrap  # noqa: F401  (python -m scripts.x)
 
-from possession.io.bench import GAMES, SEED, build_bench
+from possession.io.bench import GAMES, SEED, build_bench, build_real
 from possession.utils.config import load_config, section
 
 ROOT = _bootstrap.ROOT
@@ -33,7 +34,13 @@ def main():
     ap.add_argument("--games", nargs="+", default=list(CFG.get("games", GAMES)),
                     help="subset, e.g. --games g3")
     ap.add_argument("--kloppy", action="store_true", help="read game 3 with kloppy (needs RAM)")
+    ap.add_argument("--real-only", action="store_true",
+                    help="only (re)build the real / real_occ copies from the <game>_clean.npz files")
     args = ap.parse_args()
+    if args.real_only:
+        build_real(args.out, args.seed, games=args.games)
+        print("real copies written to {}".format(os.path.relpath(args.out, ROOT)))
+        return
     build_bench(args.src, args.out, with_degraded=not args.no_degrade, seed=args.seed,
                 games=args.games, use_kloppy=args.kloppy)
     print("bench written to {}".format(os.path.relpath(args.out, ROOT)))

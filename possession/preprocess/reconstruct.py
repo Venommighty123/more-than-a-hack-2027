@@ -11,6 +11,8 @@ when the number is used to choose a method or a cap.
 """
 from __future__ import annotations
 
+import os
+
 import numpy as np
 
 from .ball import runs
@@ -57,13 +59,15 @@ def _quadratic(x, y, s, e, present, context=4):
     return np.polyval(cx, t), np.polyval(cy, t)
 
 
-def reconstruct(x, y, method="hermite", max_gap=None, mask=None):
+def reconstruct(x, y, method="hermite", max_gap=None, mask=None, max_speed_ms=None, fps=25):
     """Fill interior gaps of the ball track.
 
     x, y      (n,) metres, NaN where missing
     method    "linear" | "hermite" | "quadratic"
     max_gap   only fill gaps of at most this many frames (None = all interior gaps)
     mask      optional bool (n,): only fill these frames (default: every NaN frame)
+    max_speed_ms  skip a gap whose two ends are further apart than a ball can travel at this speed
+              in the time (a re-detection elsewhere, not a dropout); None = no check
     Returns (x, y, filled) where ``filled`` flags the reconstructed frames.
     """
     if method not in METHODS:
@@ -77,6 +81,9 @@ def reconstruct(x, y, method="hermite", max_gap=None, mask=None):
         if s == 0 or e >= len(x) or not (present[s - 1] and present[e]):
             continue
         if max_gap is not None and e - s > max_gap:
+            continue
+        if max_speed_ms is not None and \
+                np.hypot(x[e] - x[s - 1], y[e] - y[s - 1]) * fps / (e - s + 1) > max_speed_ms:
             continue
         if method == "linear":
             fx, fy = _linear(x, y, s, e)
@@ -120,3 +127,57 @@ def mask_and_score(x, y, gap_lengths=(5, 15, 30, 60, 125, 250), trials=200, meth
                          "rmse_m": float(np.sqrt(np.mean(e ** 2))), "mae_m": float(e.mean()),
                          "max_m": float(e.max()), "within_pct": float(100 * (e <= within_m).mean())})
     return rows
+
+
+# ------------------------------------------------------------------------------------------------
+# The prepared ball: clean-up + reconstruction, shared by the labellers, flights and the file
+# written by scripts/reconstruct_ball.py
+# ------------------------------------------------------------------------------------------------
+
+DEFAULT_FILE = "outputs/ball/ball_reconstructed.npz"
+
+
+def prepare_ball(bx, by, method="hermite", max_gap=25, max_step_m=2.0, fps=25, max_speed_ms=35.0):
+    """Spikes out (as clean_ball), then gaps of at most ``max_gap`` frames filled with ``method``.
+
+    At 25 fps the old 6-frame bridge is 0.24 s. Krish's masking test (experiments/
+    reconstruction_masking.py) found Hermite best up to ~1 s (0.13 m vs 1.11 m linear) and every
+    method drifting by 5 s, so the default fills up to 25 frames (1 s) with Hermite. Longer gaps
+    stay NaN: they are a modelling decision (dead-ball rules, gap logic), not a position.
+
+    PLAUSIBILITY (``max_speed_ms``, default 35 m/s = 126 km/h): on BAR-ATH 122 of the 129 gaps of
+    <= 25 frames join two points the ball could not link in the time (median implied speed 58 m/s,
+    up to 650): the tracker re-detected the ball somewhere else, it did not lose it. Filling those
+    draws fake 50-1000 m/s kicks (the cause of the 300+ km/h "flights"), so such a gap stays NaN.
+    Returns (x, y, observed, removed, filled), observed = what the tracker gave.
+    """
+    from .ball import remove_spikes
+    bx, by = np.asarray(bx, dtype=np.float64), np.asarray(by, dtype=np.float64)
+    observed = ~(np.isnan(bx) | np.isnan(by))
+    x, y, removed = remove_spikes(bx, by, max_step_m)
+    if max_gap and max_gap > 0:
+        x, y, filled = reconstruct(x, y, method, max_gap=int(max_gap), max_speed_ms=max_speed_ms,
+                                   fps=fps)
+    else:
+        filled = np.zeros(len(x), dtype=bool)
+    return x, y, observed, removed, filled
+
+
+def save_ball_file(path, x, y, observed, removed, filled, *, method, max_gap, max_step_m, lo=0,
+                   source="", max_speed_ms=35.0):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    np.savez_compressed(path, x=x, y=y, observed=observed, removed=removed, filled=filled,
+                        method=np.array(method), max_gap=np.array(int(max_gap)),
+                        max_step_m=np.array(float(max_step_m)), lo=np.array(int(lo)),
+                        max_speed_ms=np.array(float(max_speed_ms if max_speed_ms else 0.0)),
+                        source=np.array(source))
+
+
+def load_ball_file(path):
+    """The file written by scripts/reconstruct_ball.py as a dict (x, y, flags, settings)."""
+    z = np.load(path, allow_pickle=False)
+    out = {k: z[k] for k in ("x", "y", "observed", "removed", "filled")}
+    out.update(method=str(z["method"]), max_gap=int(z["max_gap"]), max_step_m=float(z["max_step_m"]),
+               max_speed_ms=float(z["max_speed_ms"]) if "max_speed_ms" in z.files else 0.0,
+               lo=int(z["lo"]), source=str(z["source"]))
+    return out

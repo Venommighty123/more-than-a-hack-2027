@@ -285,8 +285,13 @@ def touch_spells(holder, dead, gap):
 # ==================================================================================================
 
 class Context(object):
-    def __init__(self, raw_path, team, names, tags, args):
+    def __init__(self, raw_path, team, names, tags, args, arrays=None, kickoff=None):
+        """raw_path: the ATD file (BAR-ATH). For any other game (the bench) pass ``arrays`` =
+        (px, py, bx, by) in metres with row k = frame k, and ``kickoff`` = {half: kickoff frame};
+        raw_path is then not read (possession/events/from_arrays.py)."""
         self.raw_path, self.team, self.names, self.args = raw_path, team, names, args
+        self.arrays = arrays
+        self.kickoff = dict(kickoff or HALF_KICKOFF)
         self.n_slots = len(team)
         self.counter = 0
         self.sign = {}            # half -> {HOME: +1/-1, AWAY: +1/-1}  (+1 = attacks towards larger x)
@@ -298,6 +303,21 @@ class Context(object):
                 self.set_pieces.append(t)
             elif code == "goals":
                 self.goals.append(t)
+
+    def tracking(self, lo, hi):
+        """px, py, bx, by for frames lo..hi (inclusive), from the arrays or the ATD file."""
+        if self.arrays is None:
+            return load_tracking(self.raw_path, self.n_slots, lo, hi)
+        px, py, bx, by = self.arrays
+        n = len(bx)
+
+        def cut(a):
+            out = np.full((hi - lo + 1,) + a.shape[1:], np.nan, dtype=np.float64)
+            a0, b0 = max(lo, 0), min(hi + 1, n)
+            if b0 > a0:
+                out[a0 - lo:b0 - lo] = a[a0:b0]
+            return out
+        return cut(px), cut(py), cut(bx), cut(by)
 
     def new_id(self):
         self.counter += 1
@@ -321,8 +341,8 @@ class Context(object):
         """Which way each team attacks in a half, from the kick-off formation (each team starts in its own half)."""
         if half in self.sign:
             return self.sign[half]
-        kick = HALF_KICKOFF[half]
-        px, _, _, _ = load_tracking(self.raw_path, self.n_slots, kick, kick + 24)
+        kick = self.kickoff[half]
+        px, _, _, _ = self.tracking(kick, kick + 24)
         mh = np.nanmean(px[:, self.team == HOME]) if np.isfinite(px[:, self.team == HOME]).any() else np.nan
         ma = np.nanmean(px[:, self.team == AWAY]) if np.isfinite(px[:, self.team == AWAY]).any() else np.nan
         reliable = np.isfinite(mh) and np.isfinite(ma) and abs(mh - ma) >= 3.0
@@ -430,7 +450,7 @@ class SegmentAnalyser(object):
     def run(self):
         a, ctx = self.args, self.ctx
         self.sign = ctx.attack_sign(self.half)
-        px, py, bx, by = load_tracking(ctx.raw_path, ctx.n_slots, self.lo, self.hi)
+        px, py, bx, by = ctx.tracking(self.lo, self.hi)
         self.n = n = len(bx)
         bx, by = remove_teleports(bx, by)
         self.observed = ~np.isnan(bx)
@@ -440,7 +460,7 @@ class SegmentAnalyser(object):
         self.bvx, self.bvy = c["bvx"], c["bvy"]
         self.ctrl = c["ctrl"]
         self.bspeed = np.hypot(self.bvx, self.bvy)
-        kick_k = max(0, HALF_KICKOFF[self.half] - self.lo)
+        kick_k = max(0, ctx.kickoff[self.half] - self.lo)
         self.dead, self.reason = dead_mask(self.sbx, self.sby, self.ctrl, n, a, kick_k)
         holder = np.where(self.dead, -1, c["holder"])
         spells = [s for s in touch_spells(holder, self.dead, TOUCH_GAP_FRAMES) if s[1] - s[0] >= a.min_spell]

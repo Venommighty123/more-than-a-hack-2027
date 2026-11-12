@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import importlib
 
-from . import baseline, v1, v2, v3
+from . import baseline, v1, v2, v3, v4, v5, v6, v7
 
 LABELLERS = {
     "baseline0": lambda *a, **k: baseline.label(*a, window=0, **k),
@@ -27,6 +27,10 @@ LABELLERS = {
     "v2": v2.label,
     "v3": v3.label,
     "v3c": v3.label_classifier,
+    "v4": v4.label,
+    "v5": v5.label,
+    "v6": v6.label,
+    "v7": v7.label,
 }
 
 

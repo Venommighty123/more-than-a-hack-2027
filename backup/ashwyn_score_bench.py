@@ -61,12 +61,16 @@ def get_labeller(name):
     return importlib.import_module(name).label
 
 
-def score(bench, name, variant="degraded", games=("g1", "g2", "g3"), verbose=True):
+def score(bench, name, variant="degraded", games=("g1", "g2", "g3"), verbose=True, use_tags=True):
     fn = get_labeller(name)
     rows = []
     for g in games:
         d = np.load(os.path.join(bench, "{}_{}.npz".format(g, variant)))
-        pred = fn(d["px"], d["py"], d["ball"], d["team"], [tuple(b) for b in d["blocks"]])
+        args = (d["px"], d["py"], d["ball"], d["team"], [tuple(b) for b in d["blocks"]])
+        try:
+            pred = fn(*args, tags=d["tags"] if use_tags else None)
+        except TypeError:          # labellers that take no tags (baselines, v1)
+            pred = fn(*args)
         r = pm.evaluate(to_codes(d["gt"]), to_codes(np.asarray(pred)))
         rows.append(r)
         if verbose:
@@ -86,7 +90,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--bench", required=True)
     ap.add_argument("--labeller", default="baseline50")
-    ap.add_argument("--variant", default="degraded", choices=("clean", "degraded", "hard", "all"))
+    ap.add_argument("--variant", default="degraded", choices=("clean", "degraded", "hard", "tracked", "tracked_all", "real", "real_occ", "all"))
+    ap.add_argument("--no-tags", action="store_true", help="do not give the labeller set-piece tags")
     args = ap.parse_args()
-    for v in (("clean", "degraded", "hard") if args.variant == "all" else (args.variant,)):
-        score(args.bench, args.labeller, v)
+    for v in (("clean", "degraded", "hard", "tracked", "tracked_all", "real", "real_occ") if args.variant == "all" else (args.variant,)):
+        score(args.bench, args.labeller, v, use_tags=not args.no_tags)

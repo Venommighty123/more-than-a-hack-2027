@@ -5,6 +5,7 @@ bench:
   src: data/external/metrica_sample     # Metrica public sample games, g1/ g2/ g3/
   dir: outputs/bench                    # built .npz files (git-ignored)
   games: [g1, g2, g3]
-  variant: degraded                     # default variant to score: clean | degraded | hard
-  labellers: [v1, baseline50]           # default labellers to score
+  variant: degraded                     # default copy: clean | degraded | hard | tracked | tracked_all | real | real_occ
+                                        # (--variant decision = real, real_occ, hard, degraded)
+  labellers: [v4, v5]                   # default labellers to score
   seed: 7                               # degradation noise; build in the pinned environment

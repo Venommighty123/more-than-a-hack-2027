@@ -43,11 +43,13 @@ class ResolveConfig:
         return asdict(self)
 
 
-def resolve(ctrl, dead, lo, hi, cfg: ResolveConfig | None = None) -> np.ndarray:
+def resolve(ctrl, dead, lo, hi, cfg: ResolveConfig | None = None, ctrl_sw=None) -> np.ndarray:
     """State machine over rows lo..hi (inclusive). Returns int8 codes H/A/D of length hi-lo+1.
 
-    ctrl  (n,) HOME 0 / AWAY 1 / anything else = nobody (contests should be passed as nobody)
-    dead  (n,) bool
+    ctrl     (n,) HOME 0 / AWAY 1 / anything else = nobody (contests should be passed as nobody)
+    dead     (n,) bool
+    ctrl_sw  optional (n,) stricter control (Ashwyn's v6 hysteresis, SW_MARGIN): evidence AGAINST
+             the team in possession only counts on frames where ctrl_sw agrees. None = v1 logic.
     """
     cfg = cfg or ResolveConfig()
     out = np.full(hi - lo + 1, NONE, dtype=np.int8)
@@ -61,6 +63,8 @@ def resolve(ctrl, dead, lo, hi, cfg: ResolveConfig | None = None) -> np.ndarray:
             cur, cand, cand_len, holes = NONE, NONE, 0, 0
             continue
         c = ctrl[k]
+        if ctrl_sw is not None and cur >= 0 and c == 1 - cur and ctrl_sw[k] != c:
+            c = NONE                             # not clear enough to count against cur
         if c in (H, A):
             if c == cand:
                 cand_len += 1 + holes
@@ -115,7 +119,8 @@ def merge_short(codes, min_len: int) -> np.ndarray:
     return c
 
 
-def resolve_block(ctrl, dead, lo, hi, cfg: ResolveConfig | None = None, fps: int = 25):
+def resolve_block(ctrl, dead, lo, hi, cfg: ResolveConfig | None = None, fps: int = 25,
+                  ctrl_sw=None):
     """``resolve`` then ``merge_short`` -- what a labeller calls per graded block."""
     cfg = cfg or ResolveConfig()
-    return merge_short(resolve(ctrl, dead, lo, hi, cfg), int(cfg.min_spell_s * fps))
+    return merge_short(resolve(ctrl, dead, lo, hi, cfg, ctrl_sw), int(cfg.min_spell_s * fps))

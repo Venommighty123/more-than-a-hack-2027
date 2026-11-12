@@ -26,8 +26,34 @@ global focal length (median over the match). Thresholds below are UNVALIDATED st
 calibrate them on your old labelled data (a different game, so allowed by RULES.md), never on the
 public 5 minutes or on hand labels of this match.
 
+FIXES (Nov 9, docs/changelog/flights.md). The first run on BAR-ATH gave 799 flights with peak
+ground speeds up to 341 km/h (131 above 130 km/h) and flights up to 11 s long. Causes and fixes:
+  1. it read the RAW ball: one-frame false blobs (1,071 on BAR-ATH) look like 50 m/s kicks.
+     -> the source is now the prepared ball (spikes out, gaps <= 25 frames Hermite-filled):
+        outputs/ball/ball_reconstructed.npz from scripts/reconstruct_ball.py, or the same
+        computation in memory (preprocess/reconstruct.prepare_ball). Its own 12-frame linear
+        bridge is no longer applied on top.
+  2. speed was a one-frame difference of a 5-frame smoothed track (noise -> fake kicks / landings).
+     -> velocity is the Savitzky-Golay DERIVATIVE over 7 frames.
+  3. a flight started when the speed crossed 12 m/s, a few frames after the kick.
+     -> the start is walked back to the contact frame (the speed minimum, <= back_max frames).
+  4. nothing ended a flight that a player received without a clear deceleration.
+     -> optional reception exit (players given): the ball within receive_r m of a player, slower
+        than receive_speed m/s, after min_flight_frames; and a hard cap of max_flight_s.
+  5. the height fit padded the last observation's camera/pixel, not the end frame's.
+     -> the end frame's own homography and position are used.
+  6. one focal length for the whole match, but the tactical camera zooms (relative IQR 0.18): P
+     and H disagreed by ~100 px on the ground, so every height was meaningless.
+     -> focal length estimated per flight from its own homographies; the P-vs-H gap is stored
+        (camera_gap_px) and a flight is airborne only when it is below max_camera_gap_px.
+  7. a jump faster than any kick between two consecutive frames (tracker switching detections)
+     could start or end a flight. -> runs are split there (max_step_speed).
+The kinematic part (``flight_mask``) needs no homography, so it also runs on the bench and is what
+the labellers use (labeller v5: no team controls the ball inside a flight). The height test stays
+a weak hint: the ATD ball looks like a ground foot-point, so most fits return ~0 m.
+
 Needs numpy and scipy. Usage:
-    python scripts/detect_flights.py            # -> outputs/flights/ball_flights.csv + in_air.npy
+    python scripts/detect_flights.py   # -> outputs/flights/ball_flights.csv, in_air.npy, in_flight.npy
 """
 
 import argparse
@@ -48,22 +74,28 @@ class FlightConfig:
     pitch: tuple = (105.3, 68.0)          # metres, as games.py
     image_size: tuple = (1920, 1080)
     # --- gap handling
-    max_gap: int = 12                     # frames of missing ball bridged by interpolation
+    max_gap: int = 12                     # bridge used only on an UNPREPARED ball (prepared=False)
     # --- candidate detector (old flight_detector.py, converted to metres)
-    smooth_window: int = 5                # Savitzky-Golay window on positions
+    smooth_window: int = 7                # Savitzky-Golay window (derivative = velocity)
     start_speed: float = 12.0             # m/s   flight starts above this
     stop_speed: float = 4.0               # m/s   flight ends below this
     impact_dv: float = 4.0                # m/s increase in one frame -> mid-air touch, split
     landing_dv: float = -3.0              # m/s decrease in one frame -> landing / trap
     turn_angle: float = 0.6               # rad direction change ...
     turn_min_speed: float = 6.0           # ... counted only above this speed
-    min_flight_frames: int = 10 
+    min_flight_frames: int = 10
+    back_max: int = 5                     # frames the start may be walked back to the kick
+    max_flight_s: float = 4.0             # no flight lasts longer (the old run had 11 s ones)
+    receive_r: float = 1.5                # m: reception exit, ball this close to a player ...
+    receive_speed: float = 8.0            # ... and slower than this (m/s)
+    max_step_speed: float = 40.0          # m/s between two frames: a re-detection, splits the run
     # --- height fit (old parabolic_solver.py)
     anchor_weight: float = 25.0           # px per metre pulling ends to the tracked position
     min_obs: int = 6
     min_height_m: float = 1.0             # airborne requires fitted peak >= this ...
     improvement_ratio: float = 1.5        # ... and ground-model RMS >= ratio * flight-model RMS
     ground_speed_limit_kmh: float = 130.0  # old desc.py rule, kept as a flag
+    max_camera_gap_px: float = 10.0       # height trusted only if P(Z=0) matches H this well
 
 
 @dataclass
@@ -85,6 +117,8 @@ class Flight:
     z0_speed_violation: bool
     n_observed: int
     fit_ok: bool
+    focal_px: float = float("nan")        # focal length used for this flight (its own frames)
+    camera_gap_px: float = float("nan")   # P at Z=0 vs the homography; large = height not trusted
 
 
 # -- inputs -------------------------------------------------------------------------------------
@@ -206,8 +240,121 @@ def fill_short_gaps(xy, max_gap):
     return filled, interp
 
 
-def detect_candidates(xy, cfg):
+def kinematics(xy, cfg):
+    """Speed (m/s), heading, per-frame speed change and heading change from a Savitzky-Golay
+    derivative of a gap-free run of metre positions."""
+    n = len(xy)
+    w = min(cfg.smooth_window, n if n % 2 else n - 1)
+    if w >= 3:
+        v = savgol_filter(xy, w, min(2, w - 1), deriv=1, axis=0) * cfg.fps
+    else:
+        v = np.diff(xy, axis=0, prepend=xy[:1]) * cfg.fps
+    speed = np.hypot(v[:, 0], v[:, 1])
+    ang = np.arctan2(v[:, 1], v[:, 0])
+    dv = np.diff(speed, prepend=speed[:1])
+    dang = np.abs(np.diff(ang, prepend=ang[:1]))
+    dang = np.where(dang > np.pi, 2 * np.pi - dang, dang)
+    return speed, dv, dang
+
+
+def detect_candidates(xy, cfg, near=None):
     """Hysteresis state machine on one gap-free run of metre coordinates -> [(i0, i1)] inclusive.
+
+    Exits: mid-air touch (split), landing deceleration, direction snap, low speed (old script),
+    plus reception (``near`` = distance of the nearest player, optional) and max_flight_s.
+    """
+    n = len(xy)
+    if n <= cfg.min_flight_frames:
+        return []
+    speed, dv, dang = kinematics(xy, cfg)
+    longest = int(cfg.max_flight_s * cfg.fps)
+
+    def kick(i):            # walk back from the threshold crossing to the contact frame
+        j = i
+        while j > 0 and i - j < cfg.back_max and speed[j - 1] < speed[j]:
+            j -= 1
+        return j
+
+    out, in_flight, start = [], False, 0
+    for i in range(n):
+        if not in_flight:
+            if speed[i] > cfg.start_speed:
+                in_flight, start = True, kick(i)
+                if out and start <= out[-1][1]:
+                    start = out[-1][1] + 1
+            continue
+        if dv[i] > cfg.impact_dv:                                   # mid-air touch: split
+            if i - start >= cfg.min_flight_frames:
+                out.append((start, i - 1))
+            start = i
+            continue
+        received = near is not None and i - start >= cfg.min_flight_frames and \
+            near[i] < cfg.receive_r and speed[i] < cfg.receive_speed
+        if dv[i] < cfg.landing_dv or received or i - start >= longest or \
+                (dang[i] > cfg.turn_angle and speed[i] > cfg.turn_min_speed) or \
+                speed[i] < cfg.stop_speed:                          # landing / reception / snap / slow
+            if i - start >= cfg.min_flight_frames:
+                out.append((start, i))
+            in_flight = False
+    if in_flight and n - 1 - start >= cfg.min_flight_frames:
+        out.append((start, n - 1))
+    return out
+
+
+def _split_runs(ok, breaks):
+    """finite_runs(ok), additionally split before every frame flagged in ``breaks``."""
+    out = []
+    for a, b in finite_runs(ok):
+        cuts = [a] + [k for k in np.flatnonzero(breaks[a + 1:b]) + a + 1] + [b]
+        out += [(c0, c1) for c0, c1 in zip(cuts[:-1], cuts[1:]) if c1 > c0]
+    return out
+
+
+def nearest_player_distance(px, py, x, y, chunk=20000):
+    """(n,) distance from the ball to the nearest tracked player (inf when none / no ball)."""
+    n = len(x)
+    out = np.full(n, np.inf)
+    for a in range(0, n, chunk):
+        b = min(n, a + chunk)
+        with np.errstate(invalid="ignore"):
+            d = np.hypot(px[a:b] - x[a:b, None], py[a:b] - y[a:b, None])
+        d = np.where(np.isnan(d), np.inf, d)
+        out[a:b] = d.min(1) if d.shape[1] else np.inf
+    return out
+
+
+def flight_mask(x, y, cfg=None, px=None, py=None):
+    """Kinematic flights on a PREPARED ball (metres, spikes out, short gaps filled).
+
+    Returns (flights, in_flight): flights = [(start, end)] inclusive frames, in_flight (n,) bool.
+    No homography needed: runs on BAR-ATH and on the bench alike. Pass px, py to enable the
+    reception exit.
+    """
+    cfg = cfg or FlightConfig()
+    x, y = np.asarray(x, dtype=float), np.asarray(y, dtype=float)
+    near = nearest_player_distance(px, py, x, y) if px is not None else None
+    xy = np.stack([x, y], axis=1)
+    ok = ~np.isnan(xy).any(axis=1)
+    # a jump faster than any kick between two frames is the tracker switching detections: cut the
+    # run there so it cannot start or end a flight
+    with np.errstate(invalid="ignore"):
+        step = np.r_[0.0, np.hypot(*np.diff(xy, axis=0).T) * cfg.fps]
+    flights = []
+    for a, b in _split_runs(ok, step > cfg.max_step_speed):
+        for i0, i1 in detect_candidates(xy[a:b], cfg, None if near is None else near[a:b]):
+            flights.append((a + i0, a + i1))
+    in_flight = np.zeros(len(x), dtype=bool)
+    for s, e in flights:
+        in_flight[s:e + 1] = True
+    return flights, in_flight
+
+
+def detect_candidates_legacy(xy, cfg):
+    """The Nov 7 candidate detector, unchanged (one-frame speed of a smoothed track, no kick
+    walk-back, no reception exit). Kept because events/passes.py was built and checked on it;
+    flight_mask uses detect_candidates. Pass cfg with smooth_window=5 for the original output.
+
+    Hysteresis state machine on one gap-free run of metre coordinates -> [(i0, i1)] inclusive.
 
     Same four exits as the old script (mid-air touch, landing deceleration, direction snap, low
     speed), with kinematics from smoothed *positions* in m/s instead of raw pixels.
@@ -301,8 +448,7 @@ def _characterise(s, e, filled_m, observed, Hn, valid, f, cfg):
         n_observed=int(obs.sum()))
 
     seg = filled_m[s:e + 1]
-    k = min(3, len(seg) - 1)
-    peak_kmh = float(np.max(np.hypot(*(seg[k:] - seg[:-k]).T) / k * cfg.fps * 3.6)) if k else 0.0
+    peak_kmh = float(np.max(kinematics(seg, cfg)[0]) * 3.6) if len(seg) > 1 else 0.0
     base.update(peak_ground_speed_kmh=peak_kmh,
                 z0_speed_violation=bool(peak_kmh > cfg.ground_speed_limit_kmh))
 
@@ -312,6 +458,15 @@ def _characterise(s, e, filled_m, observed, Hn, valid, f, cfg):
         return Flight(**failed)
 
     sel = frames[obs]
+    own = np.zeros(len(valid), dtype=bool)
+    own[s:e + 1] = valid[s:e + 1]
+    try:
+        f, _ = estimate_focal(Hn, own, cfg, max_samples=200)       # the camera zooms: per flight
+    except ValueError:
+        pass
+    gap = ground_consistency_px(projection_from_homography(Hn[sel[0]], f, cfg), Hn[sel[0]], cfg)
+    base.update(focal_px=float(f), camera_gap_px=float(gap))
+    failed.update(focal_px=float(f), camera_gap_px=float(gap))
     t = (sel - s) / float(cfg.fps)
     P = np.stack([projection_from_homography(Hn[k_], f, cfg) for k_ in sel])
     uv = np.stack([_pixels(Hn[k_], (filled_m[k_] / scale)[None])[0] for k_ in sel])
@@ -319,9 +474,9 @@ def _characterise(s, e, filled_m, observed, Hn, valid, f, cfg):
     # the ends are anchors, so make sure the first/last frames are in the fit's time span
     T = (e - s) / float(cfg.fps)
     t_full = np.append(t, T) if t[-1] < T else t
-    if t_full is not t:                     # pad with a copy of the last observation's P/uv
-        P = np.concatenate([P, P[-1:]]); uv = np.concatenate([uv, uv[-1:]])
-        sel = np.append(sel, e)
+    if t_full is not t:                     # pad with the END frame's own camera and position
+        P = np.concatenate([P, projection_from_homography(Hn[e], f, cfg)[None]])
+        uv = np.concatenate([uv, _pixels(Hn[e], (filled_m[e] / scale)[None])])
         t = t_full
 
     th, rms_f = fit_trajectory(t, uv, P, a0, a1, cfg, free_z=True)
@@ -333,7 +488,8 @@ def _characterise(s, e, filled_m, observed, Hn, valid, f, cfg):
     z = np.maximum(0.0, th[2] + th[5] * tt - 0.5 * G * tt * tt)
     j = int(np.argmax(z))
     h = float(z[j])
-    airborne = bool(h >= cfg.min_height_m and rms_g >= cfg.improvement_ratio * max(rms_f, 1e-9))
+    airborne = bool(h >= cfg.min_height_m and rms_g >= cfg.improvement_ratio * max(rms_f, 1e-9)
+                    and gap <= cfg.max_camera_gap_px)
     return Flight(**dict(base, max_height_m=h, peak_frame=int(round(s + tt[j] * cfg.fps)),
                          is_airborne=airborne, rms_px_flight=rms_f, rms_px_ground=rms_g,
                          fit_ok=True))
@@ -341,8 +497,14 @@ def _characterise(s, e, filled_m, observed, Hn, valid, f, cfg):
 
 # -- entry point --------------------------------------------------------------------------------
 
-def detect_flights(ball_norm, Hn, valid, cfg=None, f=None, verbose=True):
-    """ball_norm (n,2) normalised ATD ball, Hn (n,3,3) pitch->pixel, valid (n,) bool.
+def detect_flights(ball_norm, Hn, valid, cfg=None, f=None, verbose=True, prepared=True,
+                   px=None, py=None, observed=None):
+    """ball_norm (n,2) normalised ball, Hn (n,3,3) pitch->pixel, valid (n,) bool.
+
+    prepared  True (default): ball_norm is the prepared ball (reconstruct.prepare_ball); False:
+              a raw ball, bridged here over max_gap frames (the old behaviour, spikes kept)
+    px, py    players in metres (optional): enables the reception exit
+    observed  (n,) frames the tracker really saw (height fit prefers them); default = not NaN
 
     Returns (flights, in_air):
       flights : list[Flight]   every candidate, `is_airborne` says which survived the height test
@@ -352,8 +514,12 @@ def detect_flights(ball_norm, Hn, valid, cfg=None, f=None, verbose=True):
     n = len(ball_norm)
     scale = np.array(cfg.pitch)
     ball_m = ball_norm * scale
-    filled, interp = fill_short_gaps(ball_m, cfg.max_gap)
-    observed = ~np.isnan(ball_m).any(axis=1)
+    if prepared:
+        filled = ball_m
+    else:
+        filled, _ = fill_short_gaps(ball_m, cfg.max_gap)
+    if observed is None:
+        observed = ~np.isnan(ball_m).any(axis=1)
 
     if f is None:
         f, spread = estimate_focal(Hn, valid, cfg)
@@ -365,45 +531,72 @@ def detect_flights(ball_norm, Hn, valid, cfg=None, f=None, verbose=True):
         print("P vs H on the ground plane, mean gap {:.2f} px (should be small)".format(
             ground_consistency_px(projection_from_homography(Hn[k], f, cfg), Hn[k], cfg)))
 
-    flights = []
-    for a, b in finite_runs(~np.isnan(filled).any(axis=1)):
-        for i0, i1 in detect_candidates(filled[a:b], cfg):
-            flights.append(_characterise(a + i0, a + i1, filled, observed, Hn, valid, f, cfg))
+    spans, in_flight = flight_mask(filled[:, 0], filled[:, 1], cfg, px, py)
+    flights = [_characterise(s, e, filled, observed, Hn, valid, f, cfg) for s, e in spans]
 
     in_air = np.zeros(n, dtype=bool)
     for fl in flights:
         if fl.is_airborne:
             in_air[fl.start_frame:fl.end_frame + 1] = True
-    return flights, in_air
+    return flights, in_air, in_flight
 
 
 def main(argv=None):
     import pandas as pd
     import possession.io  # noqa: F401  (repository root on sys.path)
-    from possession.io import ROOT
-    from games import GAME, GAMES, require, source_frames
+    from possession.io import ROOT, load
+    from possession.preprocess.reconstruct import DEFAULT_FILE, load_ball_file, prepare_ball
+    from games import GAME, GAMES
     from starter.load_homography import load as load_h
 
     out_dir = os.path.join(ROOT, "outputs", "flights")
     parser = argparse.ArgumentParser(description="Ball-flight detection (outputs are derived match data)")
     parser.add_argument("--out", default=os.path.join(out_dir, "ball_flights.csv"))
     parser.add_argument("--frames-out", default=os.path.join(out_dir, "in_air.npy"))
+    parser.add_argument("--flight-frames-out", default=os.path.join(out_dir, "in_flight.npy"))
+    parser.add_argument("--ball-file", default=os.path.join(ROOT, DEFAULT_FILE),
+                        help="prepared ball from scripts/reconstruct_ball.py (computed if missing)")
+    parser.add_argument("--no-players", action="store_true", help="disable the reception exit")
     args = parser.parse_args(argv)
-    for path in (args.out, args.frames_out):
+    for path in (args.out, args.frames_out, args.flight_frames_out):
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
 
-    n = source_frames("tactical", GAME)
     cfg = FlightConfig(fps=GAMES[GAME]["fps"], pitch=GAMES[GAME]["pitch"])
-    ball = load_ball(require(["atd_raw"])[0], n)
+    tr = load(cache=True)
+    if os.path.exists(args.ball_file):
+        bf = load_ball_file(args.ball_file)
+        x, y, observed = bf["x"], bf["y"], bf["observed"] & ~bf["removed"]
+        print("ball source: {} ({} up to {} frames)".format(
+            os.path.relpath(args.ball_file, ROOT), bf["method"], bf["max_gap"]))
+    else:
+        x, y, observed, removed, _ = prepare_ball(tr.bx, tr.by, fps=tr.fps)
+        observed = observed & ~removed
+        print("ball source: prepared in memory (run scripts/reconstruct_ball.py to store it)")
+    scale = np.array(cfg.pitch)
+    ball = np.stack([x, y], axis=1) / scale
+    n = len(ball)
     Hn, _, valid = load_h()
-    flights, in_air = detect_flights(ball, Hn, valid, cfg)
+    Hn, valid = Hn[tr.lo:tr.lo + n], valid[tr.lo:tr.lo + n]
+    px, py = (None, None) if args.no_players else (tr.px, tr.py)
+    flights, in_air, in_flight = detect_flights(ball, Hn, valid, cfg, px=px, py=py,
+                                                observed=observed)
 
     table = pd.DataFrame([asdict(x) for x in flights])
+    if len(table):
+        table[["start_frame", "end_frame", "peak_frame"]] += tr.lo
     table.to_csv(args.out, index=False)
     np.save(args.frames_out, in_air)
-    print("{} candidates, {} airborne, {} frames in air".format(
-        len(flights), int(table["is_airborne"].sum()) if len(table) else 0, int(in_air.sum())))
+    np.save(args.flight_frames_out, in_flight)
+    print("{} flights ({} frames in flight), {} airborne ({} frames in air)".format(
+        len(flights), int(in_flight.sum()),
+        int(table["is_airborne"].sum()) if len(table) else 0, int(in_air.sum())))
     if len(table):
+        dur = (table["end_frame"] - table["start_frame"] + 1) / cfg.fps
+        print("duration s: median {:.2f}, max {:.2f};  peak ground speed km/h: median {:.0f}, "
+              "max {:.0f}, above {:.0f}: {}".format(
+                  dur.median(), dur.max(), table["peak_ground_speed_kmh"].median(),
+                  table["peak_ground_speed_kmh"].max(), cfg.ground_speed_limit_kmh,
+                  int(table["z0_speed_violation"].sum())))
         print("fit failures: {}".format(int((~table["fit_ok"]).sum())))
         print(table[table["is_airborne"]][["start_frame", "end_frame", "max_height_m",
                                            "peak_ground_speed_kmh"]].head(20).to_string())

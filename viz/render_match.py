@@ -37,6 +37,10 @@ Usage (repository root; data in ./data or $MTAH_DATA_DIR; events from event_dete
     python viz/render_match.py --list-events --event-type pass         # print a table and exit
     python viz/render_match.py --report-only --start-frame 11185 --duration 300   # no video at all
     python viz/render_match.py --no-events                             # plain tracking view
+    python viz/render_match.py --new-ball --no-events --start-frame 0 --duration 600
+                                       # the prepared ball (scripts/reconstruct_ball.py) + flights:
+                                       # white = tracked, green = reconstructed, red x = raw
+                                       # detection removed as a spike, orange ring = in flight
 
 --start is VIDEO time (hh:mm:ss, mm:ss or plain seconds) from the first frame of the tactical
 video. Video frame = round(seconds * 25); ATD frame_id = video frame + 1 (see DATA.md).
@@ -681,6 +685,13 @@ def parse_args():
     g.add_argument("--hold-on-event", type=int, default=0,
                    help="repeat the frame this many times when a new event starts (freeze to inspect)")
     g.add_argument("--list-events", action="store_true", help="print the (filtered) events as a table and exit")
+    b = ap.add_argument_group("ball source")
+    b.add_argument("--new-ball", action="store_true",
+                   help="draw the prepared ball (outputs/ball/ball_reconstructed.npz) instead of the raw one")
+    b.add_argument("--ball-file", default=None, help="prepared ball file (implies --new-ball)")
+    b.add_argument("--flights", default=None,
+                   help="in-flight flags .npy (default with --new-ball: outputs/flights/in_flight.npy)")
+    b.add_argument("--no-flights", action="store_true", help="do not mark flights")
     g.add_argument("--report-only", action="store_true", help="write the progress report for the window, no video")
     g.add_argument("--no-report", action="store_true", help="do not write the _events.csv / _report.json sidecars")
     return ap.parse_args()
@@ -760,7 +771,9 @@ def main():
 
     f0, n, focus = resolve_window(args, events)
     linger = int(round(args.linger * FPS))
-    out_path = args.out or os.path.join(ROOT, "outputs", "videos", "viz_{}.mp4".format(f0))
+    new_ball = args.new_ball or args.ball_file is not None
+    out_path = args.out or os.path.join(ROOT, "outputs", "videos", "viz_{}{}.mp4".format(
+        f0, "_newball" if new_ball else ""))
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
     base = os.path.splitext(out_path)[0]
     gt = load_gt_window(args.gt, f0, n)
@@ -789,6 +802,44 @@ def main():
     players, ball = read_tracking(raw_path, f0, n, len(team))
     print("tracking: {} frames read in {:.1f}s, ball present on {:.1f}%".format(
         n, time.time() - t, 100.0 * np.mean(~np.isnan(ball[:, 0]))))
+
+    # Ball source: the raw ATD ball (default) or the prepared ball written by
+    # scripts/reconstruct_ball.py. status per frame: 0 missing, 1 tracked, 2 reconstructed;
+    # spike[i] = the raw detection that was removed (drawn as a red x); flight[i] = in flight.
+    status = np.where(np.isnan(ball[:, 0]), 0, 1).astype(np.int8)
+    spike = np.zeros(n, dtype=bool)
+    raw_ball = ball
+    flight = np.zeros(n, dtype=bool)
+    if new_ball:
+        from possession.preprocess.reconstruct import DEFAULT_FILE, load_ball_file
+        path = args.ball_file or os.path.join(ROOT, DEFAULT_FILE)
+        if not os.path.isfile(path):
+            sys.exit("no prepared ball at {} - run scripts/reconstruct_ball.py first".format(path))
+        bf = load_ball_file(path)
+        a, b = f0 - bf["lo"], f0 - bf["lo"] + n
+        if a < 0 or b > len(bf["x"]):
+            sys.exit("the ball file covers frames {}..{}, not {}..{}".format(
+                bf["lo"], bf["lo"] + len(bf["x"]) - 1, f0, f0 + n - 1))
+        raw_ball = ball.copy()
+        ball = np.stack([bf["x"][a:b] / PITCH_L, bf["y"][a:b] / PITCH_W], axis=1).astype(np.float32)
+        status = np.where(np.isnan(ball[:, 0]), 0, np.where(bf["filled"][a:b], 2, 1)).astype(np.int8)
+        spike = bf["removed"][a:b] & ~np.isnan(raw_ball[:, 0])
+        print("ball: {} ({} up to {} frames); in this window tracked {:.1f}%, reconstructed {} "
+              "frames, spikes removed {}".format(os.path.relpath(path, ROOT), bf["method"],
+                                                 bf["max_gap"], 100.0 * np.mean(status == 1),
+                                                 int((status == 2).sum()), int(spike.sum())))
+        fpath = args.flights or os.path.join(ROOT, "outputs", "flights", "in_flight.npy")
+        if not args.no_flights:
+            if os.path.isfile(fpath):
+                fl = np.load(fpath)
+                flight = fl[a:b] if len(fl) >= b else np.zeros(n, dtype=bool)
+                print("flights: {} ({:.1f}% of the window in flight)".format(
+                    os.path.relpath(fpath, ROOT), 100.0 * flight.mean()))
+            else:
+                print("note: no {} - run scripts/detect_flights.py to mark flights".format(
+                    os.path.relpath(fpath, ROOT)))
+    BALL_BGR = {1: (255, 255, 255), 2: (80, 220, 80)}
+    FLIGHT_BGR = (0, 165, 255)
 
     tags = load_tags_window(not args.no_tags, f0, n)
 
@@ -853,7 +904,14 @@ def main():
                     if not np.isnan(ball[i]).any():
                         u, v = project(H[i], ball[i, 0], ball[i, 1])
                         if np.isfinite(u) and np.isfinite(v):
-                            cv2.circle(img, (int(u * scale), int(v * scale)), 6, (255, 255, 255), 2, cv2.LINE_AA)
+                            c = (int(u * scale), int(v * scale))
+                            cv2.circle(img, c, 6, BALL_BGR.get(int(status[i]), (255, 255, 255)), 2, cv2.LINE_AA)
+                            if flight[i]:
+                                cv2.circle(img, c, 11, FLIGHT_BGR, 2, cv2.LINE_AA)
+                    if spike[i]:
+                        u, v = project(H[i], raw_ball[i, 0], raw_ball[i, 1])
+                        if np.isfinite(u) and np.isfinite(v):
+                            _cross(img, (int(u * scale), int(v * scale)), (60, 60, 255), 7, 2)
                     for e in live_now:
                         if e["type"] != "dead_ball":
                             draw_event_video(img, e, H[i], scale, players[i])
@@ -865,6 +923,21 @@ def main():
             trail = ball[max(0, i - args.trail):i + 1] if args.trail > 0 else ball[i:i + 1]
             pitch_img, n_home, n_away, nearest = panel.render(
                 players[i], ball[i], team, trail, home_name, away_name, args.ids)
+            if new_ball:
+                if status[i] == 2:          # reconstructed: green ball over the white one
+                    c = tuple(int(round(v)) for v in panel.norm(ball[i, 0], ball[i, 1]))
+                    cv2.circle(pitch_img, c, 6, BALL_BGR[2], -1, cv2.LINE_AA)
+                    cv2.circle(pitch_img, c, 6, (0, 0, 0), 2, cv2.LINE_AA)
+                if flight[i] and status[i]:
+                    c = tuple(int(round(v)) for v in panel.norm(ball[i, 0], ball[i, 1]))
+                    cv2.circle(pitch_img, c, 12, FLIGHT_BGR, 2, cv2.LINE_AA)
+                    put(pitch_img, "IN FLIGHT", (c[0] + 14, c[1] - 10), 0.5, FLIGHT_BGR, 2)
+                if spike[i]:
+                    c = tuple(int(round(v)) for v in panel.norm(raw_ball[i, 0], raw_ball[i, 1]))
+                    _cross(pitch_img, c, (60, 60, 255), 8, 2)
+                    put(pitch_img, "spike removed", (c[0] + 10, c[1] + 18), 0.45, (60, 60, 255))
+                put(pitch_img, "new ball: white tracked, green reconstructed, red x spike removed, "
+                    "orange ring in flight", (12, PANEL_H - 56), 0.42, (230, 230, 230))
             if any(e["type"] == "dead_ball" for e in live_now):
                 pitch_img = cv2.addWeighted(pitch_img, 0.65, np.full_like(pitch_img, 110), 0.35, 0)
                 reason = next(e for e in live_now if e["type"] == "dead_ball")["details"].get("reason")
@@ -906,9 +979,14 @@ def main():
             y0 = PANEL_H
             half = half_of_video_frame(GAME, f)
             has_ball = not np.isnan(ball[i, 0])
+            ball_state = {0: "MISSING", 1: "tracked", 2: "RECONSTRUCTED"}[int(status[i])]
+            if spike[i]:
+                ball_state += " (spike removed)"
+            if flight[i]:
+                ball_state += ", in flight"
             put(canvas, "frame {}   t {}   half {}".format(f, fmt_time(f), half or "-"), (12, y0 + 20), 0.58)
             put(canvas, "tracked  H {}  A {}   ball {}   nearest-to-ball: {}".format(
-                n_home, n_away, "tracked" if has_ball else "MISSING", {0: "H", 1: "A", -1: "-"}[nearest]),
+                n_home, n_away, ball_state, {0: "H", 1: "A", -1: "-"}[nearest]),
                 (12, y0 + 43), 0.52, (255, 255, 255) if has_ball else (120, 120, 255))
             if events:
                 g = gt[i] if gt is not None and i < len(gt) else "X"
