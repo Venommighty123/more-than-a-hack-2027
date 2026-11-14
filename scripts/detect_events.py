@@ -1,5 +1,5 @@
-"""Detect football events (pass, carry, tackle, shot, restart, foul candidate, ...) from the provided
-tracking + Smart Tagging, and emit them as JSON together with a JSON Schema describing them.
+"""Detect football events (pass, carry, tackle, shot, restart, foul candidate, ...) from OUR YOLO player
+tracks + the fixed ball + Smart Tagging, and emit them as JSON together with a JSON Schema.
 
     python scripts/detect_events.py --schema-only                  # just event_schema.json (no data needed)
     python scripts/detect_events.py                                # first 5 min of play
@@ -12,8 +12,15 @@ Writes to outputs/events/ (or --out-dir):
     events_<lo>_<hi>.json      {"meta": ..., "events": [...]}   (events_full.json with --full)
     events_<lo>_<hi>.jsonl     one event per line, with --jsonl
 
-Inputs used: ATD tracking (players + ball), the ATD metadata (team of each slot) and Smart Tagging
-(set-piece type / team, goals). Nothing else: no ground truth, no hand labels, no video, and not
+Inputs used: possession.io.load() = our YOLO player tracks (packed and cleaned by
+possession/io/detections.py) + the fixed ball (outputs/ball/ball_reconstructed.npz), the club names
+from the ATD metadata, and Smart Tagging (set-piece type / team, goals). The provided ATD player
+tracks are not used. Merged from scripts/fix_events.py (now in backup/), so two of its choices are
+the defaults here:
+  * the ball gap bridge (--max-gap) is set to 0 when the fixed ball is used: the reconstruction already
+    filled what is safe, re-bridging would draw back the fake 300 km/h kicks (--keep-max-gap to keep it);
+  * "seen" (event confidence, tracking_gap events) counts only frames the tracker really saw the ball.
+--compare-events OLD.json writes events_diff.csv (kept / moved / added / removed) against older events. Nothing else: no ground truth, no hand labels, no video, and not
 ball_flight.py. Ideas reused from the repo: the zone-of-influence control rule and the touch-spell /
 transfer logic of possession_test_1.py, the ball-gap handling of ball_gap_analysis.py, and the
 byte-offset seek of visualize_tracking.py.
@@ -44,13 +51,100 @@ try:
 except ImportError:
     from scripts import _bootstrap  # noqa: F401  (python -m scripts.x)
 
-from games import GAME, half_video_blocks, require
+import csv
+
+import numpy as np
+
+from games import GAME, half_video_blocks
 from possession.events.detect import (FPS, HALF_KICKOFF, HOME, PITCH_L, PITCH_W, Context,
                                       SegmentAnalyser, clock, load_tags, renumber)
 from possession.events.schema import EVENT_TYPES, SCHEMA_VERSION, build_schema
-from possession.io.teams import load_teams
+from possession.io import load
+from possession.io.detections import DEFAULT_FILE as PLAYERS_FILE
+from possession.preprocess.reconstruct import DEFAULT_FILE as BALL_FILE, load_ball_file
 
 DEFAULT_OUT = os.path.join(_bootstrap.ROOT, "outputs", "events")
+
+
+MATCH_FRAMES = 12          # an old and a new event of the same type within 0.5 s are the same event
+
+
+class ObservedAnalyser(SegmentAnalyser):
+    """The detector, but "observed" is what the tracker saw, not what reconstruction filled in."""
+
+    def __init__(self, ctx, half, lo, hi, observed_full):
+        super().__init__(ctx, half, lo, hi)
+        n = hi - lo + 1
+        obs = np.zeros(n, dtype=bool)
+        a, b = max(lo, 0), min(hi + 1, len(observed_full))
+        obs[a - lo:b - lo] = observed_full[a:b]
+        self._obs = obs
+
+    @property
+    def observed(self):
+        return self._obs
+
+    @observed.setter
+    def observed(self, value):          # SegmentAnalyser.run assigns ~isnan(ball): ignore it
+        pass
+
+
+def ball_observed(path, n, bx):
+    """Frames the tracker really saw the ball (not removed as a spike, not reconstructed)."""
+    if not os.path.isfile(path):
+        return np.isfinite(bx)
+    z = load_ball_file(path)
+    obs = np.zeros(n, dtype=bool)
+    lo = z["lo"]
+    a, b = max(lo, 0), min(lo + len(z["x"]), n)
+    obs[a:b] = z["observed"][a - lo:b - lo].astype(bool) & ~z["removed"][a - lo:b - lo].astype(bool)
+    return obs
+
+
+# -- comparison ------------------------------------------------------------------------------------
+
+def diff_events(old, new, tol=MATCH_FRAMES):
+    """Greedy one-to-one match per type (and team) by start frame. Rows for a CSV."""
+    rows, used = [], set()
+    by_type = {}
+    for j, e in enumerate(new):
+        by_type.setdefault(e["type"], []).append(j)
+    for e in old:
+        best, best_d = None, tol + 1
+        for j in by_type.get(e["type"], []):
+            if j in used or new[j].get("team") != e.get("team"):
+                continue
+            d = abs(new[j]["frame_start"] - e["frame_start"])
+            if d < best_d:
+                best, best_d = j, d
+        if best is None:
+            rows.append(("removed", e, None))
+        else:
+            used.add(best)
+            rows.append(("kept" if best_d == 0 and new[best]["frame_end"] == e["frame_end"] else "moved",
+                         e, new[best]))
+    rows += [("added", None, new[j]) for j in range(len(new)) if j not in used]
+    rows.sort(key=lambda r: (r[2] or r[1])["frame_start"])
+    return rows
+
+
+def write_diff(path, rows):
+    with open(path, "w", newline="") as h:
+        w = csv.writer(h)
+        w.writerow(["status", "type", "team", "old_id", "new_id", "old_frame_start", "new_frame_start",
+                    "old_frame_end", "new_frame_end", "old_confidence", "new_confidence", "clock"])
+        for st, o, n in rows:
+            e = n or o
+            w.writerow([st, e["type"], e.get("team"), o and o["id"], n and n["id"], o and o["frame_start"],
+                        n and n["frame_start"], o and o["frame_end"], n and n["frame_end"],
+                        o and o.get("confidence"), n and n.get("confidence"), clock(e["frame_start"])])
+
+
+def event_counts(events):
+    c = {}
+    for e in events:
+        c[e["type"]] = c.get(e["type"], 0) + 1
+    return c
 
 
 def parse_args(argv=None):
@@ -64,6 +158,15 @@ def parse_args(argv=None):
     ap.add_argument("--jsonl", action="store_true", help="also write one event per line")
     ap.add_argument("--validate", action="store_true", help="check the output against the schema (needs jsonschema)")
     ap.add_argument("--include-gaps", action="store_true", help="emit tracking_gap events")
+    ap.add_argument("--players-file", default=os.path.join(_bootstrap.ROOT, PLAYERS_FILE),
+                    help="our YOLO tracks (kaggle/kaggle_player_tracking.ipynb)")
+    ap.add_argument("--team-mode", choices=("local", "track"), default="local")
+    ap.add_argument("--ball-file", default=os.path.join(_bootstrap.ROOT, BALL_FILE),
+                    help="fixed ball of scripts/reconstruct_ball.py")
+    ap.add_argument("--keep-max-gap", action="store_true",
+                    help="keep bridging ball gaps (--max-gap) even on the fixed ball")
+    ap.add_argument("--compare-events", default=None,
+                    help="older events JSON to diff against (writes events_diff.csv)")
     g = ap.add_argument_group("thresholds (untuned starting points; calibrate on OTHER games)")
     g.add_argument("--zoi-r0", type=float, default=1.5, help="zone radius at standstill, m")
     g.add_argument("--rel-speed-max", type=float, default=4.0, help="ball speed relative to player still 'control', m/s")
@@ -98,10 +201,16 @@ def main():
     if args.schema_only:
         return
 
-    meta_path, raw_path = require(["atd_meta", "atd_raw"])
-    teams = load_teams(meta_path)
-    team, names = teams.team, list(teams.names)
-    ctx = Context(raw_path, team, names, load_tags(), args)
+    tr = load(players_file=args.players_file, team_mode=args.team_mode, ball_file=args.ball_file)
+    team, names = tr.teams.team, list(tr.teams.names)
+    print("players: {}\nball: {}".format(tr.stats["players"], tr.stats["ball"]))
+    fixed_ball = tr.stats["ball"].startswith("fixed ball")
+    if fixed_ball and not args.keep_max_gap and args.max_gap:
+        print("ball gap bridge off (--max-gap {} -> 0): the fixed ball is already filled".format(args.max_gap))
+        args.max_gap = 0
+    observed = ball_observed(args.ball_file, tr.n, tr.bx)
+    ctx = Context(None, team, names, load_tags(), args, arrays=(tr.px, tr.py, tr.bx, tr.by),
+                  kickoff=HALF_KICKOFF)
 
     blocks = half_video_blocks(GAME)
     lo_req = blocks[0][1] if args.full else args.start
@@ -113,7 +222,7 @@ def main():
     events, windows, t0 = [], [], time.time()
     for half, lo, hi in segments:
         t1 = time.time()
-        found = SegmentAnalyser(ctx, half, lo, hi).run()
+        found = ObservedAnalyser(ctx, half, lo, hi, observed).run()
         events.extend(found)
         windows.append({"period": half, "frame_start": lo, "frame_end": hi, "time_start": clock(lo),
                         "time_end": clock(hi), "events": len(found)})
@@ -123,7 +232,8 @@ def main():
     counts = {}
     for e in events:
         counts[e["type"]] = counts.get(e["type"], 0) + 1
-    warnings = ["Automatic, uncorrected tracking: events are evidence, not ground truth.",
+    warnings = ["Automatic tracking (our YOLO players, fixed ball): events are evidence, not ground truth.",
+                "Player slots are tracklets (one slot holds several YOLO tracks in turn), not people.",
                 "foul_candidate is a Free Kick tag + preceding duel/tackle; offside and handball look the same.",
                 "Derived from the match data: do not publish or upload to any cloud AI tool (RULES.md)."]
     if len(ctx.sign) == 2 and ctx.sign[1][HOME] == ctx.sign[2][HOME]:
@@ -134,6 +244,9 @@ def main():
         "schema_version": SCHEMA_VERSION, "game": GAME, "fps": FPS, "pitch_m": [PITCH_L, PITCH_W],
         "teams": {"H": names[0] if names else "home", "A": names[1] if len(names) > 1 else "away"},
         "windows": windows, "attack_direction": ctx.direction_info,
+        "inputs": {"players": tr.stats["players"], "team_mode": tr.stats["team_mode"],
+                   "players_clean": tr.stats.get("clean"), "ball": tr.stats["ball"],
+                   "detector_max_gap": args.max_gap, "seen_share": "tracker-observed ball frames only"},
         "thresholds": {k: v for k, v in vars(args).items() if k not in ("out_dir",) and not isinstance(v, bool)},
         "event_counts": counts, "warnings": warnings}, "events": events}
 
@@ -146,6 +259,23 @@ def main():
         with open(out_path.replace(".json", ".jsonl"), "w") as handle:
             handle.writelines(json.dumps(e) + "\n" for e in events)
     print("  " + ", ".join("{} {}".format(v, k) for k, v in sorted(counts.items())))
+
+    if args.compare_events:
+        with open(args.compare_events) as handle:
+            old = [e for e in json.load(handle)["events"] if lo_req <= e["frame_start"] <= hi_req]
+        rows = diff_events(old, events)
+        diff_path = os.path.join(args.out_dir, "events_diff.csv")
+        write_diff(diff_path, rows)
+        st = {}
+        for k, _, _ in rows:
+            st[k] = st.get(k, 0) + 1
+        oc = event_counts(old)
+        print("\nchanges vs {}: {}".format(args.compare_events, "  ".join(
+            "{} {}".format(k, v) for k, v in sorted(st.items()))))
+        for k in sorted(set(oc) | set(counts)):
+            print("  {:<22} {:>6} {:>6} {:>+7}".format(k, oc.get(k, 0), counts.get(k, 0),
+                                                     counts.get(k, 0) - oc.get(k, 0)))
+        print("-> {}".format(diff_path))
 
     if args.validate:
         try:

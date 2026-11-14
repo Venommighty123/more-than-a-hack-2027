@@ -111,8 +111,22 @@ def seek_to_frame_id(handle, target_id):
         handle.seek(lo - 1)
         handle.readline()                      # realign to a line start at or after lo
 
+def read_window(first_frame, n):
+    """THE player source for the renderers: our YOLO players + the fixed ball of possession.io.load.
+
+    Returns players (n, slots, 3) = x, y (normalised 0-1), speed (NaN); ball (n, 2) normalised;
+    team (slots,) 0 home / 1 away; names (home, away). Same shapes as read_tracking.
+    """
+    from possession.io import load
+    tr = load(first_frame, first_frame + n - 1, metres=False)
+    players = np.stack([tr.px, tr.py, tr.ps], axis=2).astype(np.float32)
+    ball = np.stack([tr.bx, tr.by], axis=1).astype(np.float32)
+    return players, ball, tr.teams.team, tuple(tr.teams.names)
+
+
 def read_tracking(raw_path, first_frame, n, n_slots):
-    """Keep only video frames [first_frame, first_frame + n) of the raw ATD.
+    """Keep only video frames [first_frame, first_frame + n) of the raw ATD (diagnostics only: the
+    pipeline's players are YOLO, see read_window).
 
     Returns players (n, n_slots, 3) = x, y (normalised 0-1), speed (m/s); ball (n, 2). NaN = missing.
     Raw line: "<frame_id>:<x,y,s>;<x,y,s>;...:<ball>", frame_id = video frame + 1.

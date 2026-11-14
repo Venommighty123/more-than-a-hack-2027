@@ -1,27 +1,25 @@
-"""Read the ATD raw text (players and ball) into numpy arrays indexed by video frame.
-
-One reader for the whole repository. It replaces ``load_tracking`` in event_detection.py,
-possession_test_1.py and pass_detection.py, ``read_tracking`` in visualize_tracking.py,
-``load_atd_arrays`` in Krish's ball_reconstruction.py and ``load_ball`` in ball_flight.py.
-
-File format (DATA.md)::
-
-    <frame_id>:<x,y,s;x,y,s;...one group per slot...>:<x,y,s>      NaN = not seen
-
-* ``frame_id`` counts from 1, video frames from 0: ``video_frame = frame_id - 1``.
-* x, y are normalised 0-1; they are scaled here to metres with ``games.GAMES[game]["pitch"]``
-  (105.3 x 68.0 for BAR-ATH), because every threshold downstream is in metres.
-* s is the speed in m/s that the tracker reports. The old loaders threw it away; it is kept here
-  as ``ps`` / ``bs`` (it is often NaN for the ball).
-
-Everything is NaN where an object is not seen, including frames the file does not contain.
+"""Players and ball as numpy arrays indexed by video frame: the one input of the pipeline.
 
     from possession.io import load
+    tr = load()                        # whole match: YOLO players + the fixed ball
     tr = load(11185, 18684)            # one window, video frames inclusive
-    tr = load(cache=True)              # whole match, cached in outputs/cache/ after the first run
 
-The cache holds frame-level tracking derived from the match data: it lives in outputs/, which
-must stay git-ignored and must never be uploaded (RULES.md).
+PLAYERS come from OUR tracking (kaggle/kaggle_player_tracking.ipynb, YOLO + tracker), packed into
+slots by possession/io/detections.py and cleaned there (cut at jumps, duplicates removed). The
+player tracks provided in the ATD are NOT used any more.
+
+BALL is the fixed ball of scripts/reconstruct_ball.py (outputs/ball/ball_reconstructed.npz: ATD
+ball with spikes removed and short gaps Hermite-filled). If that file is missing the raw ATD ball is
+read instead (``load_ball``) and a note is printed; run scripts/reconstruct_ball.py once.
+
+Everything is in metres (x along 105.3 m, y across 68 m, the ATD frame the homography maps from),
+NaN where an object is not seen. ``ps`` / ``bs`` (tracker speeds) are NaN: neither source has them.
+
+Raw ATD access (``iter_raw``, ``seek_to_frame_id``, ``load_ball``) stays for the ball only:
+``frame_id`` counts from 1, video frames from 0, ``video_frame = frame_id - 1`` (DATA.md).
+
+Caches (outputs/cache/) hold frame-level data derived from the match: outputs/ stays git-ignored
+and is never uploaded (RULES.md).
 """
 from __future__ import annotations
 
@@ -192,36 +190,12 @@ def iter_raw(raw_path: str, lo: int, hi: int):
     return bad
 
 
-def _groups_slow(text: str, n_groups: int, width: int = 3) -> np.ndarray:
-    """Tolerant parse of 'x,y,s;x,y,s;...' for lines the fast path rejects."""
-    out = np.full((n_groups, width), np.nan, dtype=np.float32)
-    for g, group in enumerate(text.split(";")[:n_groups]):
-        for i, v in enumerate(group.split(",")[:width]):
-            try:
-                out[g, i] = float(v)
-            except ValueError:
-                pass
-    return out
-
-
-def _parse_chunk(lines, n_slots):
-    """Players (len, slots, 3) and ball (len, 3) for a list of (players_text, ball_text)."""
-    m = len(lines)
-    try:
-        players = np.array(",".join(p.replace(";", ",") for p, _ in lines).split(","),
-                           dtype=np.float32).reshape(m, n_slots, 3)
-    except ValueError:
-        players = np.stack([_groups_slow(p, n_slots) for p, _ in lines])
-    try:
-        ball = np.array(",".join(b for _, b in lines).split(","), dtype=np.float32).reshape(m, 3)
-    except ValueError:
-        ball = np.stack([_groups_slow(b, 1)[0] for _, b in lines])
-    return players, ball
-
-
 # ------------------------------------------------------------------------------------------------
 # Public loaders
 # ------------------------------------------------------------------------------------------------
+
+BALL_FILE = os.path.join("outputs", "ball", "ball_reconstructed.npz")
+
 
 def _span(lo, hi, game, source):
     total = source_frames(source, game)
@@ -232,57 +206,64 @@ def _span(lo, hi, game, source):
     return lo, hi
 
 
-def _cache_path(game, source, lo, hi, metres, cache_dir):
-    unit = "m" if metres else "norm"
-    return os.path.join(cache_dir or CACHE_DIR,
-                        "atd_{}_{}_{}_{}_{}.npz".format(game, source, lo, hi, unit))
+def _fixed_ball(total, game, source, data_dir, ball_file):
+    """(bx, by, source text) for the whole recording, metres."""
+    path = ball_file or os.path.join(ROOT, BALL_FILE)
+    if os.path.isfile(path):
+        from possession.preprocess.reconstruct import load_ball_file
+        bf = load_ball_file(path)
+        if bf["lo"] != 0 or len(bf["x"]) != total:
+            raise ValueError("{} covers {}+{} frames, the recording has {}".format(
+                path, bf["lo"], len(bf["x"]), total))
+        return (np.asarray(bf["x"], np.float32), np.asarray(bf["y"], np.float32),
+                "fixed ball {} ({} up to {} frames)".format(os.path.relpath(path, ROOT),
+                                                           bf["method"], bf["max_gap"]))
+    print("note: {} not found - using the raw ATD ball (run scripts/reconstruct_ball.py)".format(
+        os.path.relpath(path, ROOT)))
+    bx, by, _ = load_ball(game=game, source=source, data_dir=data_dir)
+    return bx.astype(np.float32), by.astype(np.float32), "raw ATD ball"
 
 
 def load(lo: int | None = None, hi: int | None = None, *, game: str = GAME,
          source: str = DEFAULT_SOURCE, data_dir: str | None = None, metres: bool = True,
-         cache: bool = False, cache_dir: str | None = None) -> Tracking:
-    """Players and ball for video frames lo..hi (inclusive; default: the whole recording)."""
-    raw_path, meta_path = require(["atd_raw", "atd_meta"], game, data_dir, source)
-    teams = load_teams(meta_path)
+         cache: bool = True, cache_dir: str | None = None, players_file: str | None = None,
+         team_mode: str = "local", clean: bool = True, ball_file: str | None = None,
+         refresh: bool = False) -> Tracking:
+    """YOLO players + fixed ball for video frames lo..hi (inclusive; default: the whole recording).
+
+    players_file  final_tracks_*.parquet (default data/kaggle_outputs/final_tracks_full.parquet)
+    team_mode     "local" (team from a +/-0.5 s window, default) or "track" (whole-track vote)
+    clean         cut jumps and drop duplicate runs (possession/io/detections.py)
+    cache         keep the packed players in outputs/cache/ (``cache_dir`` is kept for old callers)
+    refresh       pack the players again and overwrite that cache
+    """
+    from .detections import load_detected
+
+    if source != "tactical":
+        raise ValueError("our player tracking exists for the tactical recording only")
+    meta = load_teams(game=game, data_dir=data_dir, source=source)     # club names only
+    total = source_frames(source, game)
     lo, hi = _span(lo, hi, game, source)
     fps = GAMES[game]["fps"]
     pitch = tuple(GAMES[game]["pitch"])
 
-    cpath = _cache_path(game, source, lo, hi, metres, cache_dir)
-    if cache and os.path.isfile(cpath) and os.path.getmtime(cpath) >= os.path.getmtime(raw_path):
-        return Tracking.from_npz(cpath, teams)
-
-    n, n_slots = hi - lo + 1, teams.n_slots
-    players = np.full((n, n_slots, 3), np.nan, dtype=np.float32)
-    ball = np.full((n, 3), np.nan, dtype=np.float32)
-    rows, chunk = [], []
-    gen = iter_raw(raw_path, lo, hi)
-    bad = 0
-    while True:
-        try:
-            frame, ptxt, btxt = next(gen)
-        except StopIteration as stop:
-            bad = stop.value or 0
-            break
-        rows.append(frame - lo)
-        chunk.append((ptxt, btxt))
-        if len(chunk) == CHUNK:
-            p, b = _parse_chunk(chunk, n_slots)
-            players[rows], ball[rows] = p, b
-            rows, chunk = [], []
-    if chunk:
-        p, b = _parse_chunk(chunk, n_slots)
-        players[rows], ball[rows] = p, b
-
-    sx, sy = pitch if metres else (1.0, 1.0)
-    tr = Tracking(lo=lo, px=players[:, :, 0] * sx, py=players[:, :, 1] * sy, ps=players[:, :, 2],
-                  bx=ball[:, 0] * sx, by=ball[:, 1] * sy, bs=ball[:, 2], teams=teams, fps=fps,
-                  pitch=pitch, game=game, source=source,
-                  stats={"skipped_lines": bad, "metres": metres,
-                         "frames_with_ball": int((~np.isnan(ball[:, 0])).sum())})
-    if cache:
-        tr.save(cpath)
-    return tr
+    det = load_detected(players_file, n_frames=total, team_mode=team_mode, clean=clean, cache=cache,
+                        refresh=refresh)
+    bx, by, ball_src = _fixed_ball(total, game, source, data_dir, ball_file)
+    team = np.asarray(det["team"], dtype=np.int8)
+    teams = TeamMap(team=team, slot_ids=tuple("Y{}".format(i + 1) for i in range(len(team))),
+                    team_ids=meta.team_ids, names=meta.names, channel_order_ok=None)
+    sl = slice(lo, hi + 1)
+    sx, sy = (1.0, 1.0) if metres else pitch
+    px = (det["px"][sl] / sx).astype(np.float32)
+    py = (det["py"][sl] / sy).astype(np.float32)
+    nan_p = np.full(px.shape, np.nan, np.float32)
+    stats = dict(det["stats"], metres=metres, players="YOLO " + os.path.relpath(
+        players_file or os.path.join(ROOT, "data", "kaggle_outputs", "final_tracks_full.parquet"), ROOT),
+        ball=ball_src, frames_with_ball=int(np.isfinite(bx[sl]).sum()))
+    return Tracking(lo=lo, px=px, py=py, ps=nan_p, bx=bx[sl] / sx, by=by[sl] / sy,
+                    bs=np.full(hi - lo + 1, np.nan, np.float32), teams=teams, fps=fps,
+                    pitch=pitch, game=game, source=source, stats=stats)
 
 
 def load_ball(lo: int | None = None, hi: int | None = None, *, game: str = GAME,

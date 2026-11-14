@@ -125,7 +125,9 @@ def _slow_groups(text, n_slots):
 def load_tracking(raw_path, n_slots, lo, hi):
     """Metres for video frames lo..hi: px, py (n, slots) and bx, by (n,). NaN = not seen.
 
-    Now a thin wrapper over possession.io.tracking.load (same parse, checked identical)."""
+    A thin wrapper over possession.io.tracking.load: our YOLO players + the fixed ball (the ATD
+    player tracks are no longer used). ``raw_path`` is ignored; scripts/detect_events.py passes
+    the arrays to Context directly instead."""
     from possession.io.tracking import load
     tr = load(lo, hi)
     if tr.teams.n_slots != n_slots:

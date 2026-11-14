@@ -1,4 +1,11 @@
-"""Which team each tracking slot belongs to, read from the ATD metadata XML.
+"""Club names and the ATD slot -> team map, read from the ATD metadata XML.
+
+NOW: the pipeline's players are OUR YOLO tracks; possession.io.tracking.load() builds their
+TeamMap (one team per YOLO slot) and takes only the club names / team ids from ``load_teams``.
+Smart Tagging uses the same names (``side_of_name``). The slot -> team part below describes the
+ATD's own 46 slots and is no longer used by the pipeline.
+
+Original description:
 
 Replaces the four copies of ``team_of_each_track`` (starter/baseline.py, possession_test_1.py,
 pass_detection.py, ball_reconstruction.py) and fixes the bug they share: a slot whose ``teamId``

@@ -13,51 +13,65 @@ The organisers' own README.md, CHALLENGE.md, DATA.md, … describe the challenge
 For each of the 199,319 frames of the tactical video of FC Barcelona vs Athletic Club, write one
 label: `H` (home has the ball), `A` (away has it), `D` (dead ball) or `X` (no answer). The board
 ranks on **spellF1**, which scores possessions, not frames: a hand-over written late, a possession
-split in two or a missed stoppage all cost a lot. Our pipeline turns tracking data (players + ball,
-ball missing ~41 % of graded frames) and Smart Tagging into those labels.
+split in two or a missed stoppage all cost a lot. Our pipeline turns **our own player tracking**
+(YOLO detection + tracking on the tactical video, `kaggle/`), the **fixed ball** (the provided ball,
+spikes removed and short gaps filled; missing on ~41 % of graded frames) and Smart Tagging into
+those labels. Since Nov 14 the provided ATD **player** tracks are not used by the pipeline.
 
 ## 2. Quick start
 
 Run everything from the repository root.
 
 ```bash
-uv sync                                         # or: pip install -r requirements.txt
-python scripts/run.py                           # labeller v1 -> outputs/submissions/v1.csv (validated)
+uv sync                                         # or: pip install -r requirements.txt (+ pyarrow)
+
+# once per Kaggle run (kaggle/kaggle_player_tracking.ipynb -> data/kaggle_outputs/)
+python scripts/reconstruct_ball.py              # fixed ball -> outputs/ball/ball_reconstructed.npz
+python scripts/build_tracking.py                # YOLO players (packed + cleaned) + fixed ball -> outputs/cache/
+python scripts/eval_tracking.py                 # label-free checks of our tracking -> outputs/track_eval/
+
+# submissions
+python scripts/run.py --labeller v6 --out outputs/submissions/v6.csv      # current candidate
+python scripts/run.py --labeller v6 --out outputs/submissions/try.csv --compare outputs/submissions/v6.csv
 python -m evaluation.run_evaluation --results outputs/submissions --out outputs/evaluation
 
+# comparing labeller versions: ONLY on the bench (other games)
 python scripts/bench_build.py                   # build the test bench (Metrica public games)
-python scripts/bench_score.py --variant all     # compare labellers on the bench
-python scripts/build_features.py                # per-frame feature table for BAR-ATH
-python scripts/train_classifier.py              # train the classifier (bench only) for v3c
-python scripts/run.py --labeller v3c            # submission from the classifier + HMM labeller
-
-python scripts/reconstruct_ball.py              # prepared ball -> outputs/ball/ball_reconstructed.npz
-python scripts/detect_flights.py                # flights -> outputs/flights/ (uses the prepared ball)
-python scripts/run.py --labeller v4             # Ashwyn's v4 (best R+O among single changes)
-python scripts/run.py --labeller v5             # v4 + ball + flights + ZOI + CONFIRM 15
-python scripts/run.py --labeller v5 --set CONFIRM=6 --out outputs/submissions/v5_confirm6.csv
-python scripts/bench_score.py --labeller v4 v5 --variant decision   # real, real_occ, hard, degraded
-python experiments/v5_ablation.py               # every v5 change alone and together
-python scripts/run.py --labeller v6 --bench-pitch   # Ashwyn's v6: byte-identical to his safe file (md5 6d084c06)
 python scripts/bench_score.py --labeller v4 v6 --variant decision
-python viz/test_ball_clips.py --dry-run         # ball test: list clips where the ball is missing / corrected
-python viz/test_ball_clips.py                   # ... and render them -> outputs/test_ball/
+
+# features, events, flights, passes (all on YOLO players + fixed ball)
+python scripts/build_features.py
+python scripts/detect_flights.py
 python scripts/detect_events.py --full          # events -> outputs/events/events_full.json
-python viz/test_event_clips.py                  # event test: 8 clips per event type -> outputs/test_events/
+python scripts/detect_passes.py
+
+# looking at it (understand errors; never turn what you see into labels or settings)
+python viz/visualize_labeller.py --range 73997 75081                     # labels on video, YOLO players
+python viz/visualize_labeller.py --compare --range 73997 75081 --labels outputs/submissions/v6_atd.csv --labels2 outputs/submissions/v6.csv
+python viz/track_jumps.py --source slots        # jumps left in the slots the labellers read
+python viz/test_ball_clips.py --dry-run         # ball test clips
+python viz/test_event_clips.py                  # event test clips
 ```
 
-Data: the match bundle goes in `data/tactical/` (see DATA.md); the bench sample games in
-`data/external/metrica_sample/g1 g2 g3`. Both are git-ignored.
+Data: the match bundle goes in `data/tactical/` (see DATA.md); our Kaggle outputs in
+`data/kaggle_outputs/` (`final_tracks_full.parquet`, `raw_dets_full_*/`, `calib/`, `eval/`); the bench
+sample games in `data/external/metrica_sample/g1 g2 g3`. All git-ignored.
 
 ## 3. How the pieces fit
 
 ```
-data/ (match + bench)                     config/default.yaml (every threshold)
-        │                                          │
-        ▼                                          ▼
+tactical video ──► kaggle/kaggle_player_tracking.ipynb (YOLO + tracker, T4 teams, GPU)
+                          │  data/kaggle_outputs/final_tracks_full.parquet
+                          ▼
+possession/io/detections (slots, team per row, clean-up via preprocess/fix_players)
+                          │        + fixed ball (outputs/ball, scripts/reconstruct_ball.py)
+                          ▼
+              possession/io/tracking.load()  ── THE input: Tracking(px, py, ball, teams)
+                          │                         config/default.yaml (every threshold)
+                          ▼                                        │
 possession/io ──► possession/preprocess ──► possession/features ─────────────┐
- tracking, teams,   ball clean-up,            zoi, relational, time-to-ball, │
- tags, bench        players, reconstruct      pitch control, shape, camera   │
+ tags, teams,       ball clean-up,            zoi, relational, time-to-ball, │
+ bench              players, reconstruct      pitch control, shape, camera   │
         │                  │                        │                        │
         │                  ▼                        ▼                        │
         │          possession/detectors      possession/gaps                 │
@@ -70,7 +84,7 @@ possession/io ──► possession/preprocess ──► possession/features ─�
         │           resolve (state machine), hmm (Viterbi), classifier
         │                  │
         ▼                  ▼
-            possession/labellers  (baseline, v1, v2, v3, v3c)
+            possession/labellers  (baseline, v1-v7, v3c)
                            │
             ┌──────────────┴──────────────┐
             ▼                             ▼
@@ -99,6 +113,7 @@ possession/io ──► possession/preprocess ──► possession/features ─�
 | `requirements.txt`, `requirements-starter.txt` | 🔒 | Organisers' minimal requirements |
 | `.gitignore` | | Ignores `data/`, `outputs/`, `*.npy`, `*.mp4`, … Keep `outputs/*` in it |
 | `STRUCTURED_README.md` | ✅ | This file |
+| `kaggle/kaggle_player_tracking.ipynb` | ✅ | Our player detection + tracking on Kaggle (T4 ×2): YOLOv8 player model, ByteTrack / pitch-metre tracker, team classifiers T1–T4 (T4 = home / away / official), officials / goalkeepers / duplicates fixed per track, label-free scorecard. Output → `data/kaggle_outputs/`. Plan and decisions: `docs/player_tracking_plan.md` |
 | `ball_flights.csv`, `in_air.npy`, `viz_11185_events.csv`, `viz_11185_report.json` | ⚠️ | Old derived match data. Must never be pushed; move to `outputs/` or delete |
 
 ## 6. Organiser folders (🔒 do not edit)
@@ -110,8 +125,8 @@ possession/io ──► possession/preprocess ──► possession/features ─�
 | `evaluation/validate_submission.py` | Checks a submission file's format |
 | `evaluation/gt/` | Public ground truth: 5 minutes (frames 11185–18684), sanity check only |
 | `evaluation/results/`, `evaluation/reports/`, `evaluation/scoreboard.csv` | Published baseline results; reports / scoreboard are regenerated by `run_evaluation` (use `--out outputs/evaluation` instead) |
-| `starter/` | Organisers' loaders (`load_atd`, `load_homography`, `load_smart_tagging`), the baseline, plotting helpers, notebooks. Our `possession/io` wraps the loaders |
-| `data/` | Match bundle (`tactical/`, `broadcast/`) and `external/metrica_sample/` for the bench — git-ignored |
+| `starter/` | Organisers' loaders (`load_atd`, `load_homography`, `load_smart_tagging`), the baseline, plotting helpers, notebooks. We still use `load_homography` (and `baseline.team_of_each_track` in the ATD diagnostics); `load_atd` is no longer used for players |
+| `data/` | Match bundle (`tactical/`, `broadcast/`), our `kaggle_outputs/` and `external/metrica_sample/` for the bench — git-ignored |
 
 ---
 
@@ -128,15 +143,17 @@ Read with `possession.utils.load_config()` → `section(cfg, "ball")` → `BallC
 
 ## 8. `possession/` — our package
 
-Every module is pure numpy on arrays in metres and runs on BAR-ATH and on the bench alike.
+Every module is pure numpy on arrays in metres and runs on BAR-ATH and on the bench alike. On
+BAR-ATH the arrays come from `possession.io.load()`: our YOLO players + the fixed ball.
 
 ### 8.1 `possession/io/` — reading inputs ✅
 
 | File | Purpose | Main API |
 |---|---|---|
 | `__init__.py` | Puts the repo root on `sys.path` (so `games`, `starter` import anywhere); re-exports the API | — |
-| `tracking.py` | One reader for the ATD tracking file: players + ball in metres, tracker speeds, seek to any frame, cache in `outputs/cache/` | `load(lo, hi, cache=True) -> Tracking`, `load_ball()`, `graded_blocks()`, `graded_mask()` |
-| `teams.py` | Team of each of the 46 track slots from the metadata. Unmapped slots are UNKNOWN (the old code made them AWAY) | `load_teams() -> TeamMap` (`.home`, `.away`, `.names`, `.side_of_name()`) |
+| `tracking.py` | **The one input**: `load()` builds a `Tracking` from our YOLO players (`detections.py`) + the fixed ball (`outputs/ball/ball_reconstructed.npz`; raw ATD ball with a note if missing). Speeds `ps`/`bs` are NaN. The raw ATD reader stays for the ball only | `load(lo, hi, players_file=, team_mode="local", clean=True, ball_file=, refresh=False) -> Tracking`, `load_ball()` (raw ATD ball), `graded_blocks()`, `graded_mask()` |
+| `detections.py` | Our YOLO tracks → labeller slots: referees dropped, team per row from a ±0.5 s window of the T4 score (`local`) or the track vote (`track`), each track cut where its team changes, slots reused least-recently and never on consecutive frames, then cleaned (jump cuts, duplicate runs; no gap filling). Cached in `outputs/cache/detected_*.npz` | `load_detected()`, `build_slots()`, `clean_slots()`, `overflow_pct()`, `read_rows(path, lo, hi)` (boxes incl. referees, for drawing) |
+| `teams.py` | Club names and team ids from the metadata XML (used for our slots and for Smart Tagging). Its ATD slot → team map is no longer used by the pipeline | `load_teams() -> TeamMap` (`.home`, `.away`, `.names`, `.side_of_name()`) |
 | `tags.py` | Smart Tagging as typed records: case-insensitive, team → HOME/AWAY/None, half → 1/2 | `load_tags()`, `select()`, `set_pieces()`, `active_at()`, `frame_mask()`, `team_votes()` |
 | `bench.py` | The test bench (v2, Ashwyn Nov 7): Metrica's public sample games, ground truth from their events, simulated set-piece tags, copies `degraded`, `hard`, `tracked`, `tracked_all` and the realistic `real` / `real_occ` (noise measured on BAR-ATH) | `build_bench()`, `build_real()`, `load_bench_game()`, `iter_bench()`, `gt_from_events()`, `degrade()`, `degrade_real()`, `simulate_tags()` |
 | `dfl.py` | Parked placeholder for the DFL Bundesliga data (the bench replaced it) | raises `NotImplementedError` |
@@ -147,6 +164,7 @@ Every module is pure numpy on arrays in metres and runs on BAR-ATH and on the be
 |---|---|---|
 | `ball.py` | Ball track: remove spikes and teleports, bridge gaps ≤ 6 frames, speed, touch signal, outside-pitch flag, distance to lines | `clean_ball(bx, by) -> BallTrack`, `BallConfig` |
 | `players.py` | Player tracks: smoothing, velocities (jumps > 12 m/s = identity switch), mean speeds, centroids, attacking direction | `prepare_players() -> PlayerState`, `attack_signs()`, `to_attacking()` |
+| `fix_players.py` | Slot clean-up: cut slots at jumps (> 12 m/s over 0.2 s), blank duplicate runs (one person tracked twice); bridge / interpolate steps kept from the ATD era but off for YOLO slots | `fix_players(px, py, team, yolo=None, cfg=FixConfig(...))`, `FixConfig` |
 | `reconstruct.py` | Fill ball positions inside a gap (linear / Hermite / quadratic, from Krish), test them by hiding known stretches, and the **prepared ball** (spikes out, gaps <= 25 frames Hermite-filled unless the ends imply > 35 m/s) stored by `scripts/reconstruct_ball.py` | `reconstruct()`, `mask_and_score()`, `prepare_ball()`, `save_ball_file()`, `load_ball_file()` |
 
 ### 8.3 `possession/utils/` — shared helpers ✅
@@ -223,7 +241,7 @@ bench v2 (spellF1, R+O = mean of `real` and `real_occ`). Full history and settin
 |---|---|---|
 | `schema.py` | ✅ | JSON Schema of the 14 event types (safe to share, no data) |
 | `detect.py` | ✅ | Pass, carry, hold, duel, tackle, interception, possession change, restart, out of play, shot, goal, foul candidate — output identical to the old `event_detection.py` |
-| `passes.py` | ✅ | Pass detection on ball flights (Ashwyn) — published match stats, `--real` and `--sweep` removed; output identical otherwise. Defaults still to re-derive on other games |
+| `passes.py` | ✅ | Pass detection on ball flights (Ashwyn) — published match stats, `--real` and `--sweep` removed. `main()` reads `possession.io.load()` (YOLO players + fixed ball). Defaults still to re-derive on other games |
 
 ---
 
@@ -232,18 +250,18 @@ bench v2 (spellF1, R+O = mean of `real` and `real_occ`). Full history and settin
 | File | Status | Purpose |
 |---|---|---|
 | `_bootstrap.py` | ✅ | Makes `python scripts/x.py` and `python -m scripts.x` both work |
-| `run.py` | ✅ | Run a labeller on BAR-ATH → `outputs/submissions/<name>.csv`, validate, summarise, public-window sanity check. `--labeller`, `--out`, `--set KEY=VALUE`, `--ball-file` / `--no-ball-file`, `--no-cache`, `--bench-pitch` |
+| `run.py` | ✅ | Run a labeller on BAR-ATH (YOLO players + fixed ball) → `outputs/submissions/<name>.csv`, validate, summarise, public-window sanity check. `--labeller`, `--out` (always set it: the default overwrites `<labeller>.csv`), `--set KEY=VALUE`, `--team-mode local/track`, `--raw-players`, `--players-file`, `--ball-file` / `--no-ball-file`, `--no-cache`, `--bench-pitch`, `--compare other.csv` |
+| `build_tracking.py` | ✅ | Build the one input once (YOLO players packed + cleaned, fixed ball) → `outputs/cache/yolo_tracking.npz` + `_summary.json`; run after a new Kaggle run. `--rebuild`, `--team-mode`, `--raw-players` |
+| `eval_tracking.py` | ✅ | Label-free checks of our tracking on the graded halves (people per frame, coverage 20–23, team overflow, jumps, fragmentation, ball, referees, visible goalkeepers) + the worst minutes → `outputs/track_eval/`. `--raw-players`, `--team-mode` |
 | `bench_build.py` | ✅ | Build the bench from `data/external/metrica_sample` → `outputs/bench/`. `--no-degrade`, `--games`, `--kloppy`, `--real-only` |
 | `bench_score.py` | ✅ | Score labellers on the bench (simulated tags passed to labellers that take them). `--labeller v4 v5`, `--variant all / decision`, `--set KEY=VALUE`, `--no-tags`, `--quiet`; prints R+O |
 | `build_features.py` | ✅ | Feature table for BAR-ATH or `--bench g1` → `outputs/features/` |
 | `train_classifier.py` | ✅ | Train the classifier on the bench → `outputs/models/classifier.npz` |
-| `audit_data.py` | ✅ | Data audit: ball-gap histogram, team mapping, homography, tagging coverage → `outputs/audit/` |
 | `classify_gaps.py` | ✅ | One row per ball gap with its class and teams → `outputs/gaps/gaps_classified.csv`; `--no-tags`, `--set` |
-| `detect_events.py` | ✅ | Events JSON + schema → `outputs/events/`; `--full`, `--start/--seconds`, `--validate`, `--schema-only` |
+| `detect_events.py` | ✅ | Events JSON + schema on YOLO players + fixed ball → `outputs/events/` (merged with the old `fix_events.py`: ball-gap bridge off on the fixed ball, confidence on tracker-seen ball frames only). `--full`, `--start/--seconds`, `--validate`, `--schema-only`, `--compare-events old.json`, `--keep-max-gap` |
 | `reconstruct_ball.py` | ✅ | Prepared ball (spikes out, short plausible gaps filled) → `outputs/ball/ball_reconstructed.npz`; read by `run.py` (v5) and `detect_flights.py`. `--max-gap`, `--method`, `--max-speed`, `--csv` |
 | `detect_flights.py` | ✅ | Ball flights + in-air / in-flight flags → `outputs/flights/` (needs scipy); uses the prepared ball |
 | `detect_passes.py` | ✅ | Passes JSON / CSV → `outputs/passes/` |
-| `eda_smart_tagging.py` | ✅ | Smart Tagging counts, N/A teams, set pieces vs ball gaps, time-base check |
 | `detect_features.py`, `evauate_dfl.py`, `make_dfl_testset.py` | ⚠️ | Deprecated shims that forward to `build_features.py` / `bench_score.py` / `bench_build.py` — delete |
 
 ## 10. `viz/` — videos and plots ✅
@@ -252,9 +270,10 @@ Needs opencv-python and ffmpeg (or imageio-ffmpeg). Videos go to `outputs/videos
 
 | File | Purpose |
 |---|---|
-| `common.py` | Shared clip readers (tracking, homography, GT, tags), video reader, pitch panel, drawing helpers |
-| `render_match.py` | Tactical video + top-down pitch + events, side by side (`--start 07:27 --duration 60`, `--event-id`, `--no-video`) |
-| `render_possession.py` | The zone-of-influence possession test on video: zones, holder, contests, events, timeline |
+| `common.py` | Shared clip readers: `read_window()` (YOLO players + fixed ball, the default), `read_tracking()` (raw ATD, diagnostics / raw ball only), homography, GT, tags; video reader, pitch panel, drawing helpers |
+| `render_match.py` | Tactical video + top-down pitch + events, side by side, YOLO players (`--start 07:27 --duration 60`, `--event-id`, `--no-video`, `--new-ball`) |
+| `visualize_labeller.py` | A labeller CSV on the video: label border and badge, YOLO players, top view, change banners, timeline; `_spells.csv` and a drawn-vs-CSV check. `--compare` (diagnostics) = five panels: original \| video + ATD \| video + YOLO / top ATD \| top YOLO \| info, with `--labels2`. From Ashwyn's branch, adapted |
+| `track_jumps.py` | Every jump (teleport / swap / reappear) in our YOLO tracks (`--source yolo`, default), in the cleaned slots (`slots`) or the ATD (`atd`, diagnostics), cross-checked against the other source, with the `visualize_labeller` command to watch each → `outputs/track_audit/` |
 | `render_gaps.py` | One clip per long ball gap (`--min-length`, `--max-clips`, `--dry-run`) |
 | `flight_clips.py` | One clip per ball flight from `outputs/flights/ball_flights.csv` |
 | `possession_definition.py` | What the public ground truth means: segment table, timeline PNG, optional clips → `outputs/possession_definition/` |
@@ -265,16 +284,14 @@ Needs opencv-python and ffmpeg (or imageio-ffmpeg). Videos go to `outputs/videos
 
 | File | Purpose |
 |---|---|
-| `possession_test_1.py` | The first zone-of-influence possession test (frozen; its logic is `detectors/control.py` method `zone`) |
 | `reconstruction_masking.py` | Krish's reconstruction comparison: Hermite best up to ~1 s (0.13 m vs 1.11 m linear), all methods drift by 5 s |
-| `v5_ablation.py` | Every v5 change alone and together on bench v2 (table in `docs/changelog/labeller.md`) |
 
-## 12. `tests/` — unit tests ⬜ (✅ `test_reconstruct.py`, `test_flight.py`, `test_v5.py`, `test_v6.py`)
+## 12. `tests/` — unit tests ✅
 
-`test_frames.py`, `test_teams.py`, `test_ball.py`, `test_control.py`, `test_dead_ball.py`,
-`test_resolve.py`, `test_throw_in_side.py` (still empty), plus `test_reconstruct.py`, `test_flight.py`,
-`test_v5.py`, `test_v6.py`, `test_ball_clips.py`, `test_event_clips.py` (written). Synthetic data only (no match data), so they run on a fresh clone with
-`pytest`, or one by one with `python -m tests.test_v5`.
+`test_yolo_io.py` (slot packing, team modes, clean-up, `read_rows`), `test_reconstruct.py`,
+`test_flight.py`, `test_v5.py`, `test_v6.py`, `test_ball_clips.py`, `test_event_clips.py` — 29 tests.
+Synthetic data only (no match data), so they run on a fresh clone with `pytest`, or one by one with
+`python -m tests.test_yolo_io`. The empty placeholders were moved to `backup/` on Nov 14.
 
 ## 13. `docs/`
 
@@ -288,10 +305,16 @@ Needs opencv-python and ffmpeg (or imageio-ffmpeg). Videos go to `outputs/videos
 | `research/ball_gaps.md`, `throw_in_side.md`, `ball_reconstruction.md` | ⬜ | Method notes from Krish's docs (no frame lists) |
 | `log.md` | ⬜ | Daily "what changed + bench score" |
 | `progress/ashwyn_progress_brief.md` | ✅ | Ashwyn's Nov 9 team brief (from his branch): rules, data findings, the three-truth bench, v1–v6 history, plan to Nov 17. Its file paths refer to his `test_scripts/` layout (here: `backup/ashwyn_*` and the package) |
+| `player_tracking_plan.md` | ✅ | Plan, decisions and status of our player tracking (Kaggle notebook, variants, metrics, the switch to YOLO players on Nov 14) |
 | `tech_doc.md` | ⬜ | The technical document required by SUBMISSION.md |
 | `plans/Possession Challenge Game Plan.md` | | The game plan (to move to `docs/game_plan.md` with `git mv`) |
 
 ## 14. `backup/` — old code, reference only ⚠️
+
+`backup/discarded_ATD_players_2026-11-14/` (same folder layout as the repo) holds what the switch to
+YOLO players retired: `scripts/audit_data.py`, `eda_smart_tagging.py`, `fix_events.py` (merged into
+`detect_events.py`), `experiments/possession_test_1.py`, `v5_ablation.py`, `v7_ablation.py`,
+`viz/render_possession.py`, the empty tests and scratch helpers.
 
 Flat copies of the code the package replaced: ours (`event_detection.py`, `ball_gap_analysis.py`,
 `visualize_tracking.py`, …), Ashwyn's (`ashwyn_*`, updated Nov 9 from his branch: `labeller_v2/v3/v4`,
@@ -304,7 +327,10 @@ public (`ashwyn_pass_detection.py` still holds published match statistics).
 
 | Folder | Written by |
 |---|---|
-| `cache/` | `io.tracking.load(cache=True)` — parsed tracking (41 MB) |
+| `cache/` | `possession/io/detections.py` (packed YOLO players, `detected_*.npz`) and `scripts/build_tracking.py` (`yolo_tracking.npz`). Old `atd_*.npz` files are unused |
+| `track_eval/` | `scripts/eval_tracking.py` |
+| `track_audit/` | `viz/track_jumps.py` |
+| `labeller_viz/` | `viz/visualize_labeller.py` |
 | `submissions/` | `scripts/run.py` |
 | `evaluation/` | `python -m evaluation.run_evaluation --out outputs/evaluation` |
 | `bench/` | `scripts/bench_build.py` (bench v2; the first bench is kept in `bench_pre_nov7/`) |
@@ -313,7 +339,8 @@ public (`ashwyn_pass_detection.py` still holds published match statistics).
 | `features/` | `scripts/build_features.py`, `classifier.bench_tables()` |
 | `models/` | `scripts/train_classifier.py` |
 
-Delete `outputs/cache/` after changing loader code; it refreshes on its own only when the raw file changes.
+After changing loader code run `python scripts/build_tracking.py --rebuild` (the player cache
+refreshes on its own only when the parquet file changes).
 
 ---
 

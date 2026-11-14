@@ -161,3 +161,12 @@ The whole run should fit in **one 12-hour session**: estimated at about 3–5 ho
 - **Camera:** mostly fixed, with some pan and zoom, so K3 (tracking in pitch metres) stays in the comparison.
 - **Referees:** detected and kept as their own role. They feed two extra signals: referees per frame, and ATD slots that sit on one of our referees with no player of ours nearby (ATD tracking a referee as a player).
 - **Notebook:** `kaggle/kaggle_player_tracking.ipynb`. Run it in smoke mode first, then full.
+
+## Status (Nov 14): the pipeline runs on our YOLO players
+
+- **Players** now come only from our tracking: `data/kaggle_outputs/final_tracks_full.parquet` (full Kaggle run, best variant K3-T4+post). `possession/io/detections.py` packs the tracks into slots (team per row from a ±0.5 s window of T4 scores, referees dropped) and cleans them with `possession/preprocess/fix_players.py` (cut at jumps, duplicate runs removed, no gap filling). The provided ATD player tracks are not used by the pipeline.
+- **Ball** is the fixed ball of `scripts/reconstruct_ball.py` (`outputs/ball/ball_reconstructed.npz`).
+- **One entry point:** `possession.io.load()` returns a `Tracking` with YOLO players + fixed ball; `scripts/run.py`, `scripts/detect_events.py` (merged with the old `fix_events.py`), `possession/events/passes.py`, `scripts/build_features.py`, `scripts/classify_gaps.py` and the renderers all read it.
+- **Diagnostics only:** `viz/visualize_labeller.py --compare` and `viz/track_jumps.py --source atd|both` still draw / read the ATD slots, to see where the two disagree.
+- **Notebook v3** (`kaggle/kaggle_player_tracking.ipynb`): T4 classifier (home / away / official), off-pitch filter, officials and goalkeepers fixed per track, duplicate boxes merged per frame, goalkeeper metric on visible goalkeepers only, false left-side warning removed, officials scored on small boxes (8 × 16 px; takes effect only on a new GPU run).
+- **Open:** the notebook's calibration still names and trains the team classifier on ATD positions (pseudo-labels). Decide whether to replace that before the next Kaggle run.

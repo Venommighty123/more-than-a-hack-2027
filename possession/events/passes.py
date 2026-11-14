@@ -142,7 +142,9 @@ def team_names(meta_path):
 
 
 def load_tracking(raw_path, n_slots, lo, hi):
-    """Player (frames x slots) and ball positions in metres, video frames lo..hi inclusive.
+    """ATD-era reader, no longer used by main() (players now come from possession.io.load()).
+
+    Player (frames x slots) and ball positions in metres, video frames lo..hi inclusive.
 
     Same parse as possession_test_1.py: '<frame>:<x,y,s;x,y,s;...>:<ball x,y,...>', ATD frames
     count from 1, video frames from 0. NaN where an object is not seen.
@@ -765,9 +767,11 @@ def main(argv=None):
     set_radii(args)
 
     t0 = time.time()
-    meta_path, raw_path = require(["atd_meta", "atd_raw"])
-    team_of_slot = team_of_each_track(meta_path)
-    names = team_names(meta_path)
+    from possession.io import load
+    tr = load()                         # our YOLO players + the fixed ball (possession/io/tracking.py)
+    team_of_slot = tr.teams.team
+    names = list(tr.teams.names)
+    print("players: {}; ball: {}".format(tr.stats["players"], tr.stats["ball"]))
     blocks = half_video_blocks(GAME)
     n_total = source_frames("tactical", GAME)
     if args.start is None:
@@ -781,7 +785,9 @@ def main(argv=None):
                 2: anchor_video_frame(GAMES[GAME]["kickoff_2nd"])}
 
     print("loading tracking for video frames {}..{} ...".format(lo, hi))
-    px, py, ball = load_tracking(raw_path, len(team_of_slot), lo, hi)
+    px = tr.px[lo:hi + 1].copy()
+    py = tr.py[lo:hi + 1].copy()
+    ball = tr.ball[lo:hi + 1].astype(np.float64)
     # Keep only the two halves: tracking between them (halftime) or before kickoff is not
     # match play.
     in_match = np.zeros(hi - lo + 1, dtype=bool)

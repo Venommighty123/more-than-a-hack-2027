@@ -5,6 +5,13 @@
     python scripts/run.py --out outputs/submissions/try.csv --no-cache
     python scripts/run.py --labeller v5                    # uses outputs/ball/ball_reconstructed.npz
     python scripts/run.py --labeller v5 --set CONFIRM=6 --out outputs/submissions/v5_confirm6.csv
+    python scripts/run.py --labeller v6 --out outputs/submissions/v6.csv --compare outputs/submissions/v6_atd.csv
+
+INPUT. possession.io.load(): players = OUR YOLO tracks (data/kaggle_outputs/final_tracks_full.parquet,
+packed and cleaned by possession/io/detections.py, needs pyarrow), ball = the fixed ball
+(outputs/ball/ball_reconstructed.npz from scripts/reconstruct_ball.py). The provided ATD player
+tracks are not used. --team-mode local|track picks how a YOLO row gets its team; --raw-players
+skips the clean-up (jump cuts, duplicate runs).
 
 Labellers that accept ``ball_source`` (v5) get the prepared ball written by
 scripts/reconstruct_ball.py when the file exists (--no-ball-file to ignore it); they compute the
@@ -41,6 +48,7 @@ import possession_metrics as pm
 from games import GAME, GAMES, anchor_video_frame
 from possession.io import graded_blocks, load, load_tags
 from possession.labellers import get_labeller
+from possession.io.detections import DEFAULT_FILE as DETECTED_FILE
 from possession.preprocess.reconstruct import DEFAULT_FILE, load_ball_file
 
 ROOT = _bootstrap.ROOT
@@ -101,6 +109,22 @@ def tag_input(fn, tr):
     return tags
 
 
+def compare(labels, path, blocks):
+    """Share of graded frames on which two label files agree, and the confusion of the letters."""
+    import pandas as pd
+    ref = pd.read_csv(path, dtype={"label": "object"})["label"].str.strip().to_numpy().astype(str)
+    graded = np.zeros(len(labels), dtype=bool)
+    for _, a, b in blocks:
+        graded[a:b + 1] = True
+    a, r = labels[graded], ref[graded]
+    print("agreement with {}: {:.1f}% of graded frames".format(os.path.relpath(path, ROOT),
+                                                              100 * np.mean(a == r)))
+    print("          ref:  " + "  ".join("{:>6}".format(k) for k in "HADX"))
+    for k in "HADX":
+        print("  this {}:     ".format(k) + "  ".join("{:6.1f}".format(100 * np.mean((a == k) & (r == j)))
+                                                   for j in "HADX"))
+
+
 def write_csv(path, labels):
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", newline="") as handle:
@@ -112,7 +136,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--labeller", default="v1", help="registered name or package.module")
     ap.add_argument("--out", default=None, help="default outputs/submissions/<labeller>.csv")
-    ap.add_argument("--no-cache", action="store_true", help="re-read the raw tracking file")
+    ap.add_argument("--no-cache", action="store_true", help="rebuild the packed YOLO players instead of using outputs/cache/")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                     help="override a labeller parameter, e.g. --set CONFIRM=6")
     ap.add_argument("--ball-file", default=os.path.join(ROOT, DEFAULT_FILE),
@@ -120,15 +144,28 @@ def main():
     ap.add_argument("--no-ball-file", action="store_true", help="always prepare the ball in memory")
     ap.add_argument("--bench-pitch", action="store_true",
                     help="use 105 x 68 like the bench (reproduces the original v1 file exactly)")
+    ap.add_argument("--players-file", default=os.path.join(ROOT, DETECTED_FILE),
+                    help="final_tracks_*.parquet from kaggle/kaggle_player_tracking.ipynb")
+    ap.add_argument("--team-mode", choices=("local", "track"), default="local",
+                    help="team of a YOLO row: +/-0.5 s window of its scores (local) or the track vote")
+    ap.add_argument("--raw-players", action="store_true",
+                    help="skip the player clean-up (jump cuts, duplicate runs)")
+    ap.add_argument("--compare", default=None, help="another submission CSV to compare with")
     args = ap.parse_args()
     out = args.out or os.path.join(OUT_DIR, "{}.csv".format(args.labeller.replace(".", "_")))
 
     t0 = time.time()
-    tr = load(cache=not args.no_cache)
+    tr = load(cache=not args.no_cache, players_file=args.players_file, team_mode=args.team_mode,
+              clean=not args.raw_players, ball_file=args.ball_file)
     print("H = {}, A = {}, {} tracking slots ({} unknown)".format(
         tr.teams.names[0], tr.teams.names[1], tr.teams.n_slots, int(tr.teams.unknown.sum())))
     print("tracking: {} frames, ball on {:.1f}%, loaded in {:.1f} s".format(
         tr.n, 100 * tr.ball_present.mean(), time.time() - t0))
+    st = tr.stats
+    print("players: {} (team mode {}, clean {}; {:.1f} players/frame, a team over 11 on {:.1f}% of "
+          "frames)".format(st["players"], st["team_mode"], st.get("clean"), st["players_per_frame"],
+                           st.get("overflow_pct_after_clean", st["overflow_pct"])))
+    print("ball: {}".format(st["ball"]))
 
     blocks, kickoff2 = play_blocks()
     pitch = (105.0, 68.0) if args.bench_pitch else tr.pitch
@@ -162,6 +199,8 @@ def main():
     problem = pm.validate_submission(frame, N_FRAMES)
     print("validation: {}".format("OK" if problem is None else "FAILED - " + str(problem)))
     describe(labels, graded_blocks())
+    if args.compare:
+        compare(labels, args.compare, graded_blocks())
 
     if os.path.exists(PUBLIC_GT):
         gt = pm.label_codes(pm.read_label_csv(PUBLIC_GT))

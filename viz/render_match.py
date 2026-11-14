@@ -110,6 +110,7 @@ from viz.common import (  # noqa: E402,F401  shared readers, video, pitch panel,
     parse_time,
     put,
     read_tracking,
+    read_window,
     seek_to_frame_id,
     cv2,
 )
@@ -795,11 +796,11 @@ def main():
         f0, f0 + n - 1, n, fmt_time(f0), fmt_time(f0 + n), out_path))
 
     meta_path, raw_path = require(["atd_meta", "atd_raw"])
-    team = team_of_each_track(meta_path)
-    home_name, away_name = team_names(meta_path)
-
     t = time.time()
-    players, ball = read_tracking(raw_path, f0, n, len(team))
+    # Players: our YOLO tracks (possession.io.load via viz/common.read_window). Ball: the raw ATD
+    # ball read here, so the --new-ball switch below keeps its meaning (raw vs fixed ball).
+    players, _, team, (home_name, away_name) = read_window(f0, n)
+    _, ball = read_tracking(raw_path, f0, n, len(team_of_each_track(meta_path)))
     print("tracking: {} frames read in {:.1f}s, ball present on {:.1f}%".format(
         n, time.time() - t, 100.0 * np.mean(~np.isnan(ball[:, 0]))))
 
