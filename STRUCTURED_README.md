@@ -4,6 +4,10 @@ What every folder and file in this repository is for, how they fit together, and
 The organisers' own README.md, CHALLENGE.md, DATA.md, … describe the challenge; this file describes
 **our** code.
 
+> **New to the repo?** Start with [`HOW_TO_RUN.md`](HOW_TO_RUN.md): setup, data, your first submission
+> step by step, everyday tasks, the Kaggle notebooks, troubleshooting and a glossary. This file is
+> the file-by-file reference.
+
 **Status keys:** ✅ written and tested · ⬜ placeholder (empty, to be filled) · ⚠️ needs attention · 🔒 organiser file, do not edit
 
 ---
@@ -113,7 +117,9 @@ possession/io ──► possession/preprocess ──► possession/features ─�
 | `requirements.txt`, `requirements-starter.txt` | 🔒 | Organisers' minimal requirements |
 | `.gitignore` | | Ignores `data/`, `outputs/`, `*.npy`, `*.mp4`, … Keep `outputs/*` in it |
 | `STRUCTURED_README.md` | ✅ | This file |
+| `HOW_TO_RUN.md` | ✅ | Step-by-step guide for a first-time reader: setup, data, first submission, everyday tasks, Kaggle, troubleshooting, glossary |
 | `kaggle/kaggle_player_tracking.ipynb` | ✅ | Our player detection + tracking on Kaggle (T4 ×2): YOLOv8 player model, ByteTrack / pitch-metre tracker, team classifiers T1–T4 (T4 = home / away / official), officials / goalkeepers / duplicates fixed per track, label-free scorecard. Output → `data/kaggle_outputs/`. Plan and decisions: `docs/player_tracking_plan.md` |
+| `kaggle/kaggle_ball_detection.ipynb` | ✅ | Our YOLOv8 ball model with SAHI (960 px tiles, 0.1 overlap) where the provided ball is missing (+ a 1-in-10 accuracy sample, or `SCOPE="full"`): best ball per frame in pixels and metres, accuracy vs the provided ball, fill rate by gap length, clips → `ball_yolo_<mode>.parquet`. Not yet wired into `possession.io.load()` |
 | `ball_flights.csv`, `in_air.npy`, `viz_11185_events.csv`, `viz_11185_report.json` | ⚠️ | Old derived match data. Must never be pushed; move to `outputs/` or delete |
 
 ## 6. Organiser folders (🔒 do not edit)
@@ -164,6 +170,7 @@ BAR-ATH the arrays come from `possession.io.load()`: our YOLO players + the fixe
 |---|---|---|
 | `ball.py` | Ball track: remove spikes and teleports, bridge gaps ≤ 6 frames, speed, touch signal, outside-pitch flag, distance to lines | `clean_ball(bx, by) -> BallTrack`, `BallConfig` |
 | `players.py` | Player tracks: smoothing, velocities (jumps > 12 m/s = identity switch), mean speeds, centroids, attacking direction | `prepare_players() -> PlayerState`, `attack_signs()`, `to_attacking()` |
+| `ball_yolo.py` | YOLO ball post-processing: drop jumps / spikes / isolated picks, bridge ≤ 5 frames in pixels, find flights on the naive ground track, fit a 3D parabola through each frame's camera (from the homography), and on airborne flights replace the naive projection (which lands behind the ball) with the true ground point + height. Port and fix of the old `flight_detector.py` / `desc.py` / `parabolic_solver.py` | `load_yolo_ball()`, `fix_ball(raw, Hn, valid, fallback=, in_play=)`, `BallFixConfig` |
 | `fix_players.py` | Slot clean-up: cut slots at jumps (> 12 m/s over 0.2 s), blank duplicate runs (one person tracked twice); bridge / interpolate steps kept from the ATD era but off for YOLO slots | `fix_players(px, py, team, yolo=None, cfg=FixConfig(...))`, `FixConfig` |
 | `reconstruct.py` | Fill ball positions inside a gap (linear / Hermite / quadratic, from Krish), test them by hiding known stretches, and the **prepared ball** (spikes out, gaps <= 25 frames Hermite-filled unless the ends imply > 35 m/s) stored by `scripts/reconstruct_ball.py` | `reconstruct()`, `mask_and_score()`, `prepare_ball()`, `save_ball_file()`, `load_ball_file()` |
 
@@ -252,6 +259,7 @@ bench v2 (spellF1, R+O = mean of `real` and `real_occ`). Full history and settin
 | `_bootstrap.py` | ✅ | Makes `python scripts/x.py` and `python -m scripts.x` both work |
 | `run.py` | ✅ | Run a labeller on BAR-ATH (YOLO players + fixed ball) → `outputs/submissions/<name>.csv`, validate, summarise, public-window sanity check. `--labeller`, `--out` (always set it: the default overwrites `<labeller>.csv`), `--set KEY=VALUE`, `--team-mode local/track`, `--raw-players`, `--players-file`, `--ball-file` / `--no-ball-file`, `--no-cache`, `--bench-pitch`, `--compare other.csv` |
 | `build_tracking.py` | ✅ | Build the one input once (YOLO players packed + cleaned, fixed ball) → `outputs/cache/yolo_tracking.npz` + `_summary.json`; run after a new Kaggle run. `--rebuild`, `--team-mode`, `--raw-players` |
+| `fix_yolo_ball.py` | ✅ | YOLO ball from `kaggle_ball_detection.ipynb` → cleaned, flights fixed, provided ball as fallback → `outputs/ball/ball_yolo_fixed.npz` (same format as `ball_reconstructed.npz`, plus height `z`), `_flights.csv`, `_summary.json`. Use with `run.py --ball-file`. `--fallback none`, `--min-height`, `--csv` |
 | `eval_tracking.py` | ✅ | Label-free checks of our tracking on the graded halves (people per frame, coverage 20–23, team overflow, jumps, fragmentation, ball, referees, visible goalkeepers) + the worst minutes → `outputs/track_eval/`. `--raw-players`, `--team-mode` |
 | `bench_build.py` | ✅ | Build the bench from `data/external/metrica_sample` → `outputs/bench/`. `--no-degrade`, `--games`, `--kloppy`, `--real-only` |
 | `bench_score.py` | ✅ | Score labellers on the bench (simulated tags passed to labellers that take them). `--labeller v4 v5`, `--variant all / decision`, `--set KEY=VALUE`, `--no-tags`, `--quiet`; prints R+O |
@@ -288,8 +296,8 @@ Needs opencv-python and ffmpeg (or imageio-ffmpeg). Videos go to `outputs/videos
 
 ## 12. `tests/` — unit tests ✅
 
-`test_yolo_io.py` (slot packing, team modes, clean-up, `read_rows`), `test_reconstruct.py`,
-`test_flight.py`, `test_v5.py`, `test_v6.py`, `test_ball_clips.py`, `test_event_clips.py` — 29 tests.
+`test_yolo_io.py` (slot packing, team modes, clean-up, `read_rows`), `test_ball_yolo.py` (a synthetic lob through a synthetic camera: height and ground point recovered, with and without pixel noise; spike / isolated-pick clean-up), `test_reconstruct.py`,
+`test_flight.py`, `test_v5.py`, `test_v6.py`, `test_ball_clips.py`, `test_event_clips.py` — 32 tests.
 Synthetic data only (no match data), so they run on a fresh clone with `pytest`, or one by one with
 `python -m tests.test_yolo_io`. The empty placeholders were moved to `backup/` on Nov 14.
 
