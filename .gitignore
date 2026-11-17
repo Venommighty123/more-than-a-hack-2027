@@ -88,4 +88,6 @@ progress/
 *.parquet
 *.npy
 *.npz
-*.pt
+
+# player detector weights used by the tracking notebook (README section 2.3)
+!model_file/model_file/yolo-football-player-detection.pt
