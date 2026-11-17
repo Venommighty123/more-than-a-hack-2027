@@ -299,7 +299,7 @@ def print_table(results):
 
 def run_match():
     from games import GAME, GAMES, anchor_video_frame, half_video_blocks, require
-    from pass_detection import load_tracking, team_of_each_track
+    from atd_io import load_tracking, team_of_each_track
     n_frames = GAMES[GAME]["n_video_frames"]
     meta_path, raw_path = require(["atd_meta", "atd_raw"])
     team = team_of_each_track(meta_path)

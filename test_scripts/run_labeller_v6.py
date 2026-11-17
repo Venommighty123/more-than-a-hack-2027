@@ -33,7 +33,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(ROOT, "evaluation"))
 
 from games import GAME, GAMES, anchor_video_frame, half_video_blocks, require  # noqa: E402
-from pass_detection import load_tracking, team_of_each_track, team_names  # noqa: E402
+from atd_io import load_tracking, team_of_each_track, team_names  # noqa: E402
 import labeller_v1  # noqa: E402
 import labeller_v2  # noqa: E402
 import labeller_v6  # noqa: E402

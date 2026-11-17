@@ -50,7 +50,7 @@ for _p in (ROOT, os.path.join(ROOT, "starter"), HERE):
         sys.path.insert(0, _p)
 
 from games import GAME, GAMES, half_video_blocks, require  # noqa: E402
-from pass_detection import load_tracking, team_of_each_track, clean_ball  # noqa: E402
+from atd_io import load_tracking, team_of_each_track, clean_ball  # noqa: E402
 
 # -- params (overridable from the command line) ----------------------------------------------
 MIN_GAP_S = 1.0          # shorter gaps are bridged by interpolation already
@@ -302,7 +302,7 @@ def main():
 
     meta_path, raw_path = require(["atd_meta", "atd_raw"])
     team_of_slot = team_of_each_track(meta_path)
-    from pass_detection import team_names
+    from atd_io import team_names
     names = team_names(meta_path)
     blocks = half_video_blocks(GAME)
     lo, hi = blocks[0][1], blocks[-1][2]

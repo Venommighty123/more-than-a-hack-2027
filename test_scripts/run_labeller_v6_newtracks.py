@@ -51,7 +51,7 @@ for _p in (os.path.join(ROOT, "evaluation"), HERE, ROOT):
         sys.path.insert(0, _p)
 
 from games import GAME, GAMES, anchor_video_frame, half_video_blocks, require  # noqa: E402
-from pass_detection import team_of_each_track, team_names, PITCH_L, PITCH_W  # noqa: E402
+from atd_io import team_of_each_track, team_names, PITCH_L, PITCH_W  # noqa: E402
 import labeller_v6  # noqa: E402
 import possession_metrics as pm  # noqa: E402
 from run_labeller_v6 import describe, load_set_piece_frames  # noqa: E402
