@@ -65,3 +65,29 @@ env/
 
 # possession test outputs: frame-level tracking derived from the match data, never publish
 reports/possession_test_1/
+reports/pass_detection/
+reports/gap_classification/
+
+#data
+*.json
+*.csv
+
+#folders
+sessions/
+# public DFL/IDSSE bench matches (CC-BY 4.0, large; regenerate with test_scripts/bench/fetch_dfl_bench.py)
+bench_data/
+
+# labeller video visualiser output (derived from match data)
+reports/labeller_viz/
+results/
+results_new/
+ball/
+refrees/
+reports/
+progress/
+*.parquet
+*.npy
+*.npz
+
+# player detector weights used by the tracking notebook (README section 2.3)
+!model_file/model_file/yolo-football-player-detection.pt
